@@ -8,7 +8,7 @@ from app.services.guardrails import GuardrailsService, GuardrailViolation
 
 # Recommendation templates by persona type
 RECOMMENDATION_TEMPLATES = {
-    "subscription_optimizer": [
+    "subscription_heavy": [
         {
             "content_type": "article",
             "title": "How to Review and Cancel Unused Subscriptions",
@@ -68,7 +68,7 @@ RECOMMENDATION_TEMPLATES = {
             "rationale_template": "We noticed you're already building good savings habits. Here's an option to make saving ${growth_rate:.2f}/month even easier through automation."
         }
     ],
-    "credit_optimizer": [
+    "high_utilization": [
         {
             "content_type": "article",
             "title": "Understanding Credit Utilization: Why 30% Matters",
@@ -98,7 +98,7 @@ RECOMMENDATION_TEMPLATES = {
             "rationale_template": "At {util_percent:.0f}% utilization, you might consider a credit limit increase, which could help improve your credit score."
         }
     ],
-    "income_stable": [
+    "variable_income_budgeter": [
         {
             "content_type": "article",
             "title": "Building an Emergency Fund: A Beginner's Guide",
@@ -128,7 +128,7 @@ RECOMMENDATION_TEMPLATES = {
             "rationale_template": "We noticed your stable main income of ${avg_income:.2f}. Here are some options for building additional income streams."
         }
     ],
-    "financial_newcomer": [
+    "financial_wellness_achiever": [
         {
             "content_type": "article",
             "title": "Personal Finance 101: The Basics Everyone Should Know",
@@ -301,7 +301,7 @@ class RecommendationEngine:
         # Extract relevant data from signals
         data = {}
 
-        if persona_type == "subscription_optimizer":
+        if persona_type == "subscription_heavy":
             sub_signals = [s for s in signals if s.signal_type == "subscription_detected"]
             data["sub_count"] = len(sub_signals)
             data["total_amount"] = sum(s.value for s in sub_signals)
@@ -313,7 +313,7 @@ class RecommendationEngine:
             if savings_signals:
                 data["growth_rate"] = savings_signals[0].value
 
-        elif persona_type == "credit_optimizer":
+        elif persona_type == "high_utilization":
             credit_signals = [s for s in signals if s.signal_type == "credit_utilization"]
             if credit_signals:
                 signal = credit_signals[0]
@@ -321,7 +321,7 @@ class RecommendationEngine:
                 if signal.details:
                     data["balance"] = signal.details.get("current_balance", 0)
 
-        elif persona_type == "income_stable":
+        elif persona_type == "variable_income_budgeter":
             income_signals = [s for s in signals if s.signal_type == "income_stability"]
             if income_signals and income_signals[0].details:
                 data["avg_income"] = income_signals[0].details.get("average_income", 0)

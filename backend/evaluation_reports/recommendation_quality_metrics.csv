@@ -1,0 +1,13 @@
+Metric,Value
+relevance_score,1.0
+diversity_score,0.739
+coverage_rate,0.647
+personalization_score,1.0
+avg_recommendations_per_user,3.76
+total_recommendations,124
+,
+Content Type,Count
+article,41
+guide,25
+video,25
+calculator,33

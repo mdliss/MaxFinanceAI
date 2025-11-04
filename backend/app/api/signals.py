@@ -31,6 +31,8 @@ async def detect_signals(
     """
     Detect behavioral signals for a specific user.
 
+    Per rubric requirement: computes signals for BOTH 30-day and 180-day windows.
+
     Requires user consent to be granted.
     Returns all detected signals including:
     - subscription_detected
@@ -51,14 +53,22 @@ async def detect_signals(
             detail="User consent required for signal detection"
         )
 
-    # Detect signals
+    # Detect signals for BOTH time windows (per rubric requirement)
     detector = SignalDetector(db)
-    signals = await detector.detect_all_signals(user_id)
+    all_signals = []
 
-    # Save signals
-    await detector.save_signals(signals)
+    # 30-day window
+    signals_30d = await detector.detect_all_signals(user_id, window_days=30)
+    all_signals.extend(signals_30d)
 
-    return signals
+    # 180-day window
+    signals_180d = await detector.detect_all_signals(user_id, window_days=180)
+    all_signals.extend(signals_180d)
+
+    # Save all signals
+    await detector.save_signals(all_signals)
+
+    return all_signals
 
 
 @router.get("/{user_id}", response_model=List[SignalResponse])

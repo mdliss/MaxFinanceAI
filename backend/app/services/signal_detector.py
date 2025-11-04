@@ -12,14 +12,28 @@ class SignalDetector:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def detect_all_signals(self, user_id: str) -> List[Signal]:
-        """Detect all signals for a user"""
+    async def detect_all_signals(self, user_id: str, window_days: int = 180) -> List[Signal]:
+        """
+        Detect all signals for a user within a time window.
+
+        Args:
+            user_id: The user ID
+            window_days: Time window in days (30 or 180 per rubric requirement)
+        """
         signals = []
 
-        # Get user transactions
+        # Calculate cutoff date for time window
+        cutoff_date = datetime.utcnow() - timedelta(days=window_days)
+
+        # Get user transactions within time window
         result = await self.db.execute(
             select(Transaction)
-            .where(Transaction.user_id == user_id)
+            .where(
+                and_(
+                    Transaction.user_id == user_id,
+                    Transaction.date >= cutoff_date
+                )
+            )
             .order_by(Transaction.date)
         )
         transactions = result.scalars().all()
@@ -33,26 +47,28 @@ class SignalDetector:
         if not transactions:
             return signals
 
-        # Detect each signal type
-        signals.extend(await self.detect_subscriptions(user_id, transactions))
-        signals.extend(await self.detect_savings_growth(user_id, accounts, transactions))
-        signals.extend(await self.detect_credit_utilization(user_id, accounts))
-        signals.extend(await self.detect_income_stability(user_id, transactions))
+        # Detect each signal type with time window
+        signals.extend(await self.detect_subscriptions(user_id, transactions, window_days))
+        signals.extend(await self.detect_savings_growth(user_id, accounts, transactions, window_days))
+        signals.extend(await self.detect_credit_utilization(user_id, accounts, window_days))
+        signals.extend(await self.detect_income_stability(user_id, transactions, window_days))
 
         return signals
 
     async def detect_subscriptions(
         self,
         user_id: str,
-        transactions: List[Transaction]
+        transactions: List[Transaction],
+        window_days: int = 180
     ) -> List[Signal]:
         """
-        Detect recurring subscription payments.
+        Detect recurring subscription payments within time window.
 
         Algorithm:
         - Group transactions by merchant name
         - Check for recurring patterns (monthly, weekly, etc.)
         - Identify consistent amounts and intervals
+        - Per rubric: detect ≥3 recurring merchants in 90 days
         """
         signals = []
         merchant_transactions = defaultdict(list)
@@ -107,7 +123,7 @@ class SignalDetector:
 
             if is_recurring and amount_consistent and len(txns) >= 2:
                 signal = Signal(
-                    signal_id=f"sub_{user_id}_{merchant.replace(' ', '_')}_{datetime.utcnow().timestamp()}",
+                    signal_id=f"sub_{user_id}_{merchant.replace(' ', '_')}_{window_days}d_{datetime.utcnow().timestamp()}",
                     user_id=user_id,
                     signal_type="subscription_detected",
                     value=avg_amount,
@@ -116,7 +132,8 @@ class SignalDetector:
                         "frequency": frequency,
                         "average_amount": round(avg_amount, 2),
                         "interval_days": round(avg_interval, 1),
-                        "occurrences": len(txns)
+                        "occurrences": len(txns),
+                        "window_days": window_days
                     }
                 )
                 signals.append(signal)
@@ -127,23 +144,26 @@ class SignalDetector:
         self,
         user_id: str,
         accounts: List[Account],
-        transactions: List[Transaction]
+        transactions: List[Transaction],
+        window_days: int = 180
     ) -> List[Signal]:
         """
-        Detect savings growth patterns.
+        Detect savings growth patterns within time window.
 
         Algorithm:
         - Identify savings accounts
         - Track balance trends over time
         - Calculate growth rate
+        - Per rubric: net inflow to savings-like accounts, growth rate
         """
         signals = []
 
         for account in accounts:
-            if account.subtype != "savings":
+            # Per rubric: savings, money market, cash management, HSA
+            if account.subtype not in ["savings", "money market", "cash management", "hsa"]:
                 continue
 
-            # Get transactions for this savings account
+            # Get transactions for this savings account (already filtered by time window)
             account_txns = [t for t in transactions if t.account_id == account.account_id]
 
             if len(account_txns) < 2:
@@ -154,18 +174,22 @@ class SignalDetector:
 
             # Calculate balance progression
             deposits = [t for t in account_txns if t.amount > 0]
+            withdrawals = [t for t in account_txns if t.amount < 0]
 
-            if len(deposits) >= 2:
+            if len(deposits) >= 1:
                 total_deposited = sum(abs(t.amount) for t in deposits)
+                total_withdrawn = sum(abs(t.amount) for t in withdrawals)
+                net_inflow = total_deposited - total_withdrawn
+
                 days_span = (account_txns[-1].date - account_txns[0].date).days
 
                 if days_span > 0:
                     # Calculate monthly growth rate
-                    monthly_rate = (total_deposited / days_span) * 30
+                    monthly_rate = (net_inflow / days_span) * 30
 
                     if monthly_rate > 0:
                         signal = Signal(
-                            signal_id=f"sav_{user_id}_{account.account_id}_{datetime.utcnow().timestamp()}",
+                            signal_id=f"sav_{user_id}_{account.account_id}_{window_days}d_{datetime.utcnow().timestamp()}",
                             user_id=user_id,
                             signal_type="savings_growth",
                             value=monthly_rate,
@@ -173,8 +197,10 @@ class SignalDetector:
                                 "account_id": account.account_id,
                                 "current_balance": round(account.current_balance, 2),
                                 "monthly_growth_rate": round(monthly_rate, 2),
+                                "net_inflow": round(net_inflow, 2),
                                 "total_deposits": round(total_deposited, 2),
-                                "days_tracked": days_span
+                                "days_tracked": days_span,
+                                "window_days": window_days
                             }
                         )
                         signals.append(signal)
@@ -184,14 +210,15 @@ class SignalDetector:
     async def detect_credit_utilization(
         self,
         user_id: str,
-        accounts: List[Account]
+        accounts: List[Account],
+        window_days: int = 180
     ) -> List[Signal]:
         """
         Detect credit utilization patterns.
 
         Algorithm:
         - Calculate utilization rate for credit accounts
-        - Flag high utilization (>30%)
+        - Flag high utilization (≥30%, ≥50%, ≥80% per rubric)
         """
         signals = []
 
@@ -205,8 +232,18 @@ class SignalDetector:
             # Calculate utilization rate
             utilization_rate = (account.current_balance / account.credit_limit) * 100
 
+            # Determine status per rubric thresholds
+            if utilization_rate >= 80:
+                status = "critical"
+            elif utilization_rate >= 50:
+                status = "high"
+            elif utilization_rate >= 30:
+                status = "elevated"
+            else:
+                status = "healthy"
+
             signal = Signal(
-                signal_id=f"cred_{user_id}_{account.account_id}_{datetime.utcnow().timestamp()}",
+                signal_id=f"cred_{user_id}_{account.account_id}_{window_days}d_{datetime.utcnow().timestamp()}",
                 user_id=user_id,
                 signal_type="credit_utilization",
                 value=utilization_rate,
@@ -215,7 +252,8 @@ class SignalDetector:
                     "current_balance": round(account.current_balance, 2),
                     "credit_limit": round(account.credit_limit, 2),
                     "utilization_percent": round(utilization_rate, 2),
-                    "status": "high" if utilization_rate > 30 else "healthy"
+                    "status": status,
+                    "window_days": window_days
                 }
             )
             signals.append(signal)
@@ -225,22 +263,25 @@ class SignalDetector:
     async def detect_income_stability(
         self,
         user_id: str,
-        transactions: List[Transaction]
+        transactions: List[Transaction],
+        window_days: int = 180
     ) -> List[Signal]:
         """
-        Detect income stability patterns.
+        Detect income stability patterns within time window.
 
         Algorithm:
         - Identify income transactions
         - Calculate regularity and variance
         - Assess stability score
+        - Per rubric: payroll ACH detection, payment frequency/variability, median pay gap
         """
         signals = []
 
         # Find income transactions (positive amounts with "Income" category)
+        # Case-insensitive check to catch both "Income" and "INCOME"
         income_txns = [
             t for t in transactions
-            if t.amount > 0 and t.category_primary == "Income"
+            if t.amount > 0 and t.category_primary and t.category_primary.upper() == "INCOME"
         ]
 
         if len(income_txns) < 2:
@@ -264,6 +305,10 @@ class SignalDetector:
         avg_interval = sum(intervals) / len(intervals)
         avg_amount = sum(amounts) / len(amounts)
 
+        # Calculate MEDIAN pay gap (required for Variable Income Budgeter persona)
+        sorted_intervals = sorted(intervals)
+        median_pay_gap = sorted_intervals[len(sorted_intervals) // 2] if sorted_intervals else 0
+
         # Calculate variance
         interval_variance = sum((i - avg_interval) ** 2 for i in intervals) / len(intervals)
         amount_variance = sum((a - avg_amount) ** 2 for a in amounts) / len(amounts)
@@ -276,16 +321,18 @@ class SignalDetector:
         stability_score = (interval_consistency + amount_consistency) / 2
 
         signal = Signal(
-            signal_id=f"inc_{user_id}_{datetime.utcnow().timestamp()}",
+            signal_id=f"inc_{user_id}_{window_days}d_{datetime.utcnow().timestamp()}",
             user_id=user_id,
             signal_type="income_stability",
             value=stability_score,
             details={
                 "average_income": round(avg_amount, 2),
                 "average_interval_days": round(avg_interval, 1),
+                "median_pay_gap_days": round(median_pay_gap, 1),
                 "stability_score": round(stability_score, 2),
                 "income_count": len(income_txns),
-                "status": "stable" if stability_score > 70 else "variable"
+                "status": "stable" if stability_score > 70 else "variable",
+                "window_days": window_days
             }
         )
         signals.append(signal)

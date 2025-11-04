@@ -5,7 +5,6 @@ import type { Recommendation } from '@/types';
 
 interface RecommendationCardProps {
   recommendation: Recommendation;
-  onApprove: (id: number, notes?: string) => Promise<void>;
   onOverride: (
     id: number,
     updates: { title?: string; description?: string; rationale?: string },
@@ -16,14 +15,12 @@ interface RecommendationCardProps {
 
 export default function RecommendationCard({
   recommendation,
-  onApprove,
   onOverride,
   onFlag,
 }: RecommendationCardProps) {
   const [showActions, setShowActions] = useState(false);
   const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [showFlagModal, setShowFlagModal] = useState(false);
-  const [notes, setNotes] = useState('');
 
   // Override state
   const [overrideTitle, setOverrideTitle] = useState(recommendation.title);
@@ -36,25 +33,14 @@ export default function RecommendationCard({
   const [flagSeverity, setFlagSeverity] = useState<'low' | 'medium' | 'high'>('medium');
 
   const getStatusBadge = () => {
-    const statusConfig = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
-      approved: { bg: 'bg-green-100', text: 'text-green-800', label: 'Approved' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rejected' },
-      review: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Review' },
-    };
-
-    const config = statusConfig[recommendation.approval_status] || statusConfig.pending;
+    const isFlagged = recommendation.approval_status === 'flagged';
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-        {config.label}
+      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+        isFlagged ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
+      }`}>
+        {isFlagged ? 'Flagged' : 'Active'}
       </span>
     );
-  };
-
-  const handleApprove = async () => {
-    await onApprove(recommendation.recommendation_id, notes);
-    setNotes('');
-    setShowActions(false);
   };
 
   const handleOverride = async () => {
@@ -137,15 +123,9 @@ export default function RecommendationCard({
         )}
 
         {/* Action Buttons */}
-        {showActions && recommendation.approval_status === 'pending' && (
+        {showActions && (
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex gap-2">
-              <button
-                onClick={handleApprove}
-                className="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-              >
-                ✓ Approve
-              </button>
               <button
                 onClick={() => setShowOverrideModal(true)}
                 className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
@@ -158,17 +138,6 @@ export default function RecommendationCard({
               >
                 ⚑ Flag
               </button>
-            </div>
-
-            {/* Notes Input */}
-            <div className="mt-3">
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add operator notes (optional)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none"
-                rows={2}
-              />
             </div>
           </div>
         )}

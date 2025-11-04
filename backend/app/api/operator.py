@@ -438,11 +438,32 @@ async def get_user_details(
             {
                 "persona_id": p.persona_id,
                 "persona_type": p.persona_type,
+                "window_days": p.window_days,
                 "priority_rank": p.priority_rank,
                 "criteria_met": p.criteria_met,
                 "assigned_at": p.assigned_at.isoformat() if p.assigned_at else None
             }
             for p in personas
+        ],
+        "personas_30d": [
+            {
+                "persona_id": p.persona_id,
+                "persona_type": p.persona_type,
+                "priority_rank": p.priority_rank,
+                "criteria_met": p.criteria_met,
+                "assigned_at": p.assigned_at.isoformat() if p.assigned_at else None
+            }
+            for p in personas if p.window_days == 30
+        ],
+        "personas_180d": [
+            {
+                "persona_id": p.persona_id,
+                "persona_type": p.persona_type,
+                "priority_rank": p.priority_rank,
+                "criteria_met": p.criteria_met,
+                "assigned_at": p.assigned_at.isoformat() if p.assigned_at else None
+            }
+            for p in personas if p.window_days == 180
         ],
         "recommendations": [
             {
@@ -733,4 +754,170 @@ async def flag_recommendation(
         "severity": request.severity,
         "reason": request.reason,
         "operator_notes": recommendation.operator_notes
+    }
+
+
+@router.post("/auto-flag-recommendations", status_code=status.HTTP_200_OK)
+async def auto_flag_recommendations(db: AsyncSession = Depends(get_db)):
+    """
+    Automatically flag recommendations that need review based on smart rules.
+
+    Flags recommendations if:
+    - Rationale is too short (<50 characters)
+    - Content is debt-related (for credit_optimizer persona)
+    - Eligibility not met
+    - Already has operator notes indicating issues
+
+    Returns count of flagged recommendations.
+    """
+    flagged_count = 0
+
+    # Get all approved or pending recommendations
+    result = await db.execute(
+        select(Recommendation).where(
+            Recommendation.approval_status.in_(["approved", "pending"])
+        )
+    )
+    recommendations = result.scalars().all()
+
+    for rec in recommendations:
+        should_flag = False
+        flag_reasons = []
+
+        # Rule 1: Short rationale
+        if rec.rationale and len(rec.rationale) < 50:
+            should_flag = True
+            flag_reasons.append("Rationale too short (<50 chars)")
+
+        # Rule 2: Credit optimizer persona (debt-related content needs extra review)
+        if rec.persona_type == "credit_optimizer":
+            debt_keywords = ["debt", "credit card", "utilization", "balance transfer", "payment"]
+            title_lower = rec.title.lower() if rec.title else ""
+            desc_lower = rec.description.lower() if rec.description else ""
+
+            if any(keyword in title_lower or keyword in desc_lower for keyword in debt_keywords):
+                should_flag = True
+                flag_reasons.append("Debt-related content for credit_optimizer")
+
+        # Rule 3: Eligibility not met
+        if not rec.eligibility_met:
+            should_flag = True
+            flag_reasons.append("Eligibility criteria not met")
+
+        # Rule 4: Already has concerning operator notes
+        if rec.operator_notes and any(word in rec.operator_notes.lower() for word in ["issue", "problem", "concern", "review"]):
+            should_flag = True
+            flag_reasons.append("Operator notes indicate concerns")
+
+        # Apply flagging
+        if should_flag:
+            rec.approval_status = "review"
+            flag_summary = "; ".join(flag_reasons)
+            rec.operator_notes = f"AUTO-FLAGGED: {flag_summary}"
+
+            # Log the auto-flag
+            audit_log = AuditLog(
+                user_id=rec.user_id,
+                action="recommendation_auto_flagged",
+                actor="system",
+                details=f"Recommendation {rec.recommendation_id} auto-flagged. Reasons: {flag_summary}"
+            )
+            db.add(audit_log)
+
+            flagged_count += 1
+
+    await db.commit()
+
+    # Get total review count for better UX feedback
+    result = await db.execute(
+        select(func.count(Recommendation.recommendation_id))
+        .where(Recommendation.approval_status == "review")
+    )
+    total_review_count = result.scalar()
+
+    # Provide clear, contextual feedback
+    if flagged_count == 0:
+        message = f"No new items flagged. All {len(recommendations)} approved/pending recommendations passed auto-flag checks."
+    else:
+        message = f"Flagged {flagged_count} new recommendation(s) for review. Total items in review queue: {total_review_count}."
+
+    return {
+        "message": message,
+        "newly_flagged_count": flagged_count,
+        "total_in_review": total_review_count,
+        "total_scanned": len(recommendations),
+        "rules_applied": [
+            "Short rationale (<50 chars)",
+            "Debt-related content for credit_optimizer",
+            "Eligibility not met",
+            "Concerning operator notes"
+        ]
+    }
+
+
+@router.get("/stats/priority-queue")
+async def get_priority_queue(db: AsyncSession = Depends(get_db)):
+    """
+    Get recommendations organized by priority for operator workflow.
+
+    Priority order:
+    1. Flagged/Review status
+    2. Credit-related content (higher risk)
+    3. Pending recommendations
+    4. Recently approved
+    """
+    # Get flagged recommendations
+    result = await db.execute(
+        select(Recommendation)
+        .where(Recommendation.approval_status == "review")
+        .order_by(desc(Recommendation.created_at))
+    )
+    flagged = result.scalars().all()
+
+    # Get pending recommendations
+    result = await db.execute(
+        select(Recommendation)
+        .where(Recommendation.approval_status == "pending")
+        .order_by(desc(Recommendation.created_at))
+    )
+    pending = result.scalars().all()
+
+    # Get high-risk recommendations (credit_optimizer persona)
+    result = await db.execute(
+        select(Recommendation)
+        .where(
+            and_(
+                Recommendation.persona_type == "credit_optimizer",
+                Recommendation.approval_status == "approved"
+            )
+        )
+        .order_by(desc(Recommendation.created_at))
+        .limit(10)
+    )
+    high_risk_approved = result.scalars().all()
+
+    return {
+        "flagged_count": len(flagged),
+        "pending_count": len(pending),
+        "high_risk_approved_count": len(high_risk_approved),
+        "workflow_steps": [
+            {
+                "step": 1,
+                "title": "Review Flagged",
+                "count": len(flagged),
+                "status": "review"
+            },
+            {
+                "step": 2,
+                "title": "Review Pending",
+                "count": len(pending),
+                "status": "pending"
+            },
+            {
+                "step": 3,
+                "title": "Monitor High-Risk",
+                "count": len(high_risk_approved),
+                "status": "approved"
+            }
+        ]
     }

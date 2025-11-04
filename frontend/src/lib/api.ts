@@ -55,9 +55,12 @@ export const api = {
     return fetchAPI<Recommendation[]>(`/recommendations/${userId}${params}`);
   },
 
-  getAllRecommendations: async (status?: string) => {
-    const params = status ? `?status=${status}` : '';
-    const response = await fetchAPI<{ recommendations: Recommendation[]; total: number }>(`/operator/recommendations${params}`);
+  getAllRecommendations: async (status?: string, limit: number = 500) => {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    params.append('limit', limit.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const response = await fetchAPI<{ recommendations: Recommendation[]; total: number }>(`/operator/recommendations${queryString}`);
     return response.recommendations;
   },
 
@@ -109,4 +112,44 @@ export const api = {
     const response = await fetchAPI<{ logs: AuditLog[]; total: number }>(`/operator/audit-logs${params}`);
     return response.logs;
   },
+
+  // Auto-flagging
+  autoFlagRecommendations: () =>
+    fetchAPI<{ message: string; flagged_count: number; rules_applied: string[] }>(
+      '/operator/auto-flag-recommendations',
+      { method: 'POST' }
+    ),
+
+  // Priority Queue
+  getPriorityQueue: () =>
+    fetchAPI<{
+      flagged_count: number;
+      pending_count: number;
+      high_risk_approved_count: number;
+      workflow_steps: Array<{
+        step: number;
+        title: string;
+        count: number;
+        status: string;
+      }>;
+    }>('/operator/stats/priority-queue'),
+
+  // Stats
+  getRecommendationsByPersona: () =>
+    fetchAPI<{ persona_stats: Array<{ persona_type: string; count: number }> }>(
+      '/operator/stats/recommendations-by-persona'
+    ),
+
+  getDashboardStats: () =>
+    fetchAPI<{
+      total_users: number;
+      users_with_consent: number;
+      total_recommendations: number;
+      pending_recommendations: number;
+      approved_recommendations: number;
+      total_signals: number;
+      total_personas: number;
+      total_transactions: number;
+      recent_consent_changes: number;
+    }>('/operator/dashboard/stats'),
 };

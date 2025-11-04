@@ -40,7 +40,14 @@
       "Bash(sqlite3:*)",
       "Bash(for:*)",
       "Bash(do curl -s -X POST http://localhost:8000/api/v1/consent -H \"Content-Type: application/json\" -d \"{\"\"user_id\"\": \"\"$user\"\", \"\"consent_status\"\": true}\")",
-      "Bash(docker cp:*)"
+      "Bash(docker cp:*)",
+      "Bash(./start.sh:*)",
+      "mcp__task-master-ai__add_task",
+      "mcp__task-master-ai__scope_down_task",
+      "Bash(pytest:*)",
+      "Bash(docker exec:*)",
+      "Bash(backend/evaluation_reports/evaluation_metrics.json)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []

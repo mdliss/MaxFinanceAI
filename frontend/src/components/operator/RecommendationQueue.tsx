@@ -13,7 +13,7 @@ export default function RecommendationQueue({ userId }: RecommendationQueueProps
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('pending');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     loadRecommendations();
@@ -33,15 +33,6 @@ export default function RecommendationQueue({ userId }: RecommendationQueueProps
       setError(err instanceof Error ? err.message : 'Failed to load recommendations');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleApprove = async (recommendationId: number, notes?: string) => {
-    try {
-      await api.approveRecommendation(recommendationId, notes);
-      await loadRecommendations();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to approve recommendation');
     }
   };
 
@@ -72,11 +63,8 @@ export default function RecommendationQueue({ userId }: RecommendationQueueProps
   };
 
   const statusOptions = [
-    { value: 'pending', label: 'Pending', color: 'yellow' },
-    { value: 'approved', label: 'Approved', color: 'green' },
-    { value: 'rejected', label: 'Rejected', color: 'red' },
-    { value: 'review', label: 'Review', color: 'orange' },
-    { value: 'all', label: 'All', color: 'gray' },
+    { value: 'all', label: 'All' },
+    { value: 'flagged', label: 'Flagged' },
   ];
 
   return (
@@ -138,7 +126,6 @@ export default function RecommendationQueue({ userId }: RecommendationQueueProps
             <RecommendationCard
               key={rec.recommendation_id}
               recommendation={rec}
-              onApprove={handleApprove}
               onOverride={handleOverride}
               onFlag={handleFlag}
             />

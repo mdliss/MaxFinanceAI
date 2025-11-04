@@ -1,0 +1,14 @@
+Metric,Value
+approval_rate,1.0
+rejection_rate,0.0
+pending_count,0
+total_approved,124
+total_rejected,0
+signal_detection_rate,0.529
+consent_rate,0.75
+total_users,68
+users_with_signals,36
+,
+Persona Type,Count
+credit_optimizer,11
+financial_newcomer,50

@@ -190,7 +190,7 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -203,7 +203,7 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -217,7 +217,7 @@
           1,
           12
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": []
       },
       {
@@ -230,13 +230,101 @@
         "dependencies": [
           13
         ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "Create Simplified Decision Log",
+        "description": "Document the most critical technical decisions and rationale for framework selection, database choice, and OpenAI integration.",
+        "details": "Create a concise decision log focusing on the top 3-4 critical technical choices. Include rationale for selecting FastAPI, SQLite, and OpenAI integration, highlighting key trade-offs.",
+        "testStrategy": "Review decision log for clarity and ensure the most critical decisions are documented with clear rationale.",
         "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 17,
+        "title": "Run Basic Evaluation and Export Metrics",
+        "description": "Execute the evaluation endpoint to produce basic metrics and export them.",
+        "details": "Run the evaluation endpoint for all test users. Export the basic metrics in JSON format.",
+        "testStrategy": "Verify that the evaluation metrics are generated and exported correctly in JSON format.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 18,
+        "title": "Record Basic Pipeline and API Timing Measurements",
+        "description": "Capture basic timing data for pipeline execution and API responses during normal operation.",
+        "details": "Measure and record the time taken for pipeline execution and API responses under normal conditions. No need for detailed benchmarking or load testing.",
+        "testStrategy": "Verify that timing measurements are recorded accurately during standard operations.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 19,
+        "title": "Document Core Table Schemas",
+        "description": "Create documentation for core table schemas with field descriptions.",
+        "details": "Document the core table schemas, including field names and types. Provide brief descriptions for each field.",
+        "testStrategy": "Review documentation for completeness and accuracy. Ensure field names and types match the actual database schema.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 20,
+        "title": "Document Key AI Integration Points and Prompts",
+        "description": "Document the main OpenAI API integration points and primary prompt templates.",
+        "details": "Focus on documenting the primary OpenAI integration locations and their purposes. Include essential prompt templates for recommendation generation. Simplify explanations of model selection and guardrail prompts for tone detection and PII filtering.",
+        "testStrategy": "Verify that the main AI integration points and primary prompt templates are documented. Ensure that the documentation is clear and concise.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 21,
+        "title": "Create Simplified Technical Summary",
+        "description": "Write a brief technical summary focusing on core system architecture and key achievements.",
+        "details": "Document a high-level overview of the system architecture and highlight major technical achievements.",
+        "testStrategy": "Review summary for clarity and ensure core architecture and key achievements are accurately described.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 22,
+        "title": "Basic System Walkthrough Video",
+        "description": "Record a simple walkthrough video demonstrating key system features.",
+        "details": "Capture a screen recording of the system in action. Show basic navigation through the operator dashboard, user search, and recommendation workflow. Highlight the guardrail system briefly.",
+        "testStrategy": "Ensure the video covers all key features with clear visuals. Check that the audio is understandable, if included.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 23,
+        "title": "Run and Summarize Backend Test Results",
+        "description": "Execute the backend test suite and capture a summary of the results.",
+        "details": "Run the backend tests using pytest and summarize the outcomes, focusing on pass/fail results.",
+        "testStrategy": "Ensure the backend test suite executes successfully and summarize the results without detailed analysis.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-11-03T22:06:16.223Z",
-      "updated": "2025-11-03T23:49:26.618Z",
+      "updated": "2025-11-04T04:22:45.013Z",
       "description": "Tasks for master context"
     }
   }

@@ -21,13 +21,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3001:3000"
+      - "3001:3001"
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
     depends_on:
       - backend
     command: npm run dev

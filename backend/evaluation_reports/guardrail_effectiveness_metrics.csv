@@ -1,0 +1,17 @@
+Metric,Value
+eligibility_rate,0.529
+eligible_users,36
+total_users_checked,68
+rate_limit_violations,0
+content_safety_enabled,True
+,
+Ineligibility Reason,Count
+no_consent,17
+under_age,0
+insufficient_transactions,0
+no_signals,15
+,
+Vulnerable Population,Count
+seniors_65_plus,0
+low_income_under_30k,22
+young_adults_18_21,0

@@ -1,0 +1,61 @@
+{
+    "timestamp": "2025-11-04T15:45:13.885872",
+    "recommendation_quality": {
+        "relevance_score": 1.0,
+        "diversity_score": 0.738,
+        "coverage_rate": 0.615,
+        "personalization_score": 1.0,
+        "avg_recommendations_per_user": 3.75,
+        "total_recommendations": 120,
+        "content_type_distribution": {
+            "article": 40,
+            "guide": 24,
+            "video": 24,
+            "calculator": 32
+        }
+    },
+    "system_performance": {
+        "total_signals_detected": 42,
+        "total_personas_assigned": 61,
+        "total_recommendations_generated": 120,
+        "throughput_signals_per_day": 1.4,
+        "throughput_personas_per_day": 2.03,
+        "throughput_recommendations_per_day": 4.0,
+        "unique_users_processed": 36,
+        "time_period_days": 30
+    },
+    "user_outcomes": {
+        "approval_rate": 0.992,
+        "rejection_rate": 0.0,
+        "pending_count": 1,
+        "total_approved": 119,
+        "total_rejected": 0,
+        "persona_distribution": {
+            "credit_optimizer": 11,
+            "financial_newcomer": 49,
+            "subscription_optimizer": 1
+        },
+        "signal_detection_rate": 0.493,
+        "consent_rate": 0.712,
+        "total_users": 73,
+        "users_with_signals": 36
+    },
+    "guardrail_effectiveness": {
+        "eligibility_rate": 0.493,
+        "eligible_users": 36,
+        "total_users_checked": 73,
+        "ineligibility_reasons": {
+            "no_consent": 21,
+            "under_age": 0,
+            "insufficient_transactions": 1,
+            "no_signals": 15
+        },
+        "vulnerable_populations": {
+            "seniors_65_plus": 0,
+            "low_income_under_30k": 22,
+            "young_adults_18_21": 0
+        },
+        "rate_limit_violations": 0,
+        "content_safety_enabled": true
+    }
+}

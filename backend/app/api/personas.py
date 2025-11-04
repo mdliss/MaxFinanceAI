@@ -33,21 +33,44 @@ class PersonaDefinitionResponse(BaseModel):
 @router.post("/{user_id}/assign", response_model=List[PersonaResponse])
 async def assign_personas(
     user_id: str,
-    window_days: int = 180,
+    window_days: Optional[int] = None,  # If None, assigns for BOTH windows
     db: AsyncSession = Depends(get_db)
 ):
     """
     Assign personas to a user based on their signals.
 
+    Per rubric requirement: assigns personas for BOTH 30-day and 180-day windows.
+    If window_days is specified, only assigns for that window.
+
     Requires user consent to be granted.
     Returns all assigned personas in priority order.
     """
     try:
-        assigner = PersonaAssigner(db, window_days=window_days)
-        personas = await assigner.assign_personas(user_id)
-        await assigner.save_personas(user_id, personas)
+        all_personas = []
 
-        return personas
+        if window_days is None:
+            # Per rubric: assign for BOTH windows
+            # 30-day window
+            assigner_30d = PersonaAssigner(db, window_days=30)
+            personas_30d = await assigner_30d.assign_personas(user_id)
+            all_personas.extend(personas_30d)
+
+            # 180-day window
+            assigner_180d = PersonaAssigner(db, window_days=180)
+            personas_180d = await assigner_180d.assign_personas(user_id)
+            all_personas.extend(personas_180d)
+
+            # Save all personas (replaces existing)
+            await assigner_30d.save_personas(user_id, all_personas)
+
+        else:
+            # Single window assignment
+            assigner = PersonaAssigner(db, window_days=window_days)
+            personas = await assigner.assign_personas(user_id)
+            await assigner.save_personas(user_id, personas)
+            all_personas = personas
+
+        return all_personas
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

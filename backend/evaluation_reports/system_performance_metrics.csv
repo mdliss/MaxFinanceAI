@@ -1,0 +1,9 @@
+Metric,Value
+total_signals_detected,42
+total_personas_assigned,61
+total_recommendations_generated,124
+throughput_signals_per_day,1.4
+throughput_personas_per_day,2.03
+throughput_recommendations_per_day,4.13
+unique_users_processed,36
+time_period_days,30
