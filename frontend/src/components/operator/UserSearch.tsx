@@ -73,7 +73,7 @@ export default function UserSearch({ onUserSelect, selectedUserId }: UserSearchP
 
         {/* Dropdown */}
         {showDropdown && searchTerm && (
-          <div className="absolute z-10 w-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-2xl max-h-60 overflow-auto dropdown-enter">
+          <div className="absolute z-50 w-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-2xl max-h-60 overflow-auto dropdown-enter">
             {loading ? (
               <div className="px-4 py-3 text-sm text-[var(--text-secondary)]">Loading...</div>
             ) : error ? (
@@ -114,8 +114,8 @@ export default function UserSearch({ onUserSelect, selectedUserId }: UserSearchP
             </div>
             <div className={`px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
               selectedUser.consent_status
-                ? 'bg-green-900/30 text-green-400'
-                : 'bg-red-900/30 text-red-400'
+                ? 'bg-slate-500/10 text-slate-700'
+                : 'bg-red-500/10 text-red-700'
             }`}>
               {selectedUser.consent_status ? 'Consent Active' : 'No Consent'}
             </div>

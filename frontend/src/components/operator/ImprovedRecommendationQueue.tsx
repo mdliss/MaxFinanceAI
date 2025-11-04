@@ -106,10 +106,10 @@ export default function ImprovedRecommendationQueue() {
 
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { bg: string; text: string }> = {
-      review: { bg: 'bg-red-900/30', text: 'text-red-400' },
-      pending: { bg: 'bg-yellow-900/30', text: 'text-yellow-400' },
-      approved: { bg: 'bg-green-900/30', text: 'text-green-400' },
-      rejected: { bg: 'bg-gray-700/30', text: 'text-gray-400' },
+      review: { bg: 'bg-red-500/10', text: 'text-red-700' },
+      pending: { bg: 'bg-amber-500/10', text: 'text-amber-700' },
+      approved: { bg: 'bg-slate-500/10', text: 'text-slate-700' },
+      rejected: { bg: 'bg-gray-500/10', text: 'text-gray-600' },
     };
     const badge = badges[status] || badges.pending;
     return (
@@ -121,14 +121,14 @@ export default function ImprovedRecommendationQueue() {
 
   const getPersonaBadge = (persona: string) => {
     const colors: Record<string, string> = {
-      financial_newcomer: 'bg-blue-900/30 text-blue-400',
-      credit_optimizer: 'bg-purple-900/30 text-purple-400',
-      savings_builder: 'bg-green-900/30 text-green-400',
-      subscription_heavy: 'bg-orange-900/30 text-orange-400',
-      variable_income: 'bg-pink-900/30 text-pink-400',
+      financial_newcomer: 'bg-blue-500/10 text-blue-700',
+      credit_optimizer: 'bg-purple-500/10 text-purple-700',
+      savings_builder: 'bg-teal-500/10 text-teal-700',
+      subscription_heavy: 'bg-rose-500/10 text-rose-700',
+      variable_income: 'bg-indigo-500/10 text-indigo-700',
     };
     return (
-      <span className={`px-2 py-1 rounded text-xs font-medium transition-smooth ${colors[persona] || 'bg-gray-700/30 text-gray-400'}`}>
+      <span className={`px-2 py-1 rounded text-xs font-medium transition-smooth ${colors[persona] || 'bg-gray-500/10 text-gray-600'}`}>
         {persona.replace('_', ' ').toUpperCase()}
       </span>
     );
@@ -273,7 +273,7 @@ export default function ImprovedRecommendationQueue() {
                   {rec.approval_status !== 'approved' && (
                     <button
                       onClick={() => handleApprove(rec.recommendation_id)}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-smooth"
+                      className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-smooth"
                     >
                       Approve
                     </button>
@@ -281,7 +281,7 @@ export default function ImprovedRecommendationQueue() {
                   {rec.approval_status !== 'review' && (
                     <button
                       onClick={() => handleFlag(rec.recommendation_id)}
-                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-smooth"
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-smooth"
                     >
                       Flag
                     </button>

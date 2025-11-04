@@ -36,7 +36,7 @@ export default function RecommendationCard({
     const isFlagged = recommendation.approval_status === 'flagged';
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
-        isFlagged ? 'bg-orange-900/30 text-orange-400' : 'bg-green-900/30 text-green-400'
+        isFlagged ? 'bg-red-500/10 text-red-700' : 'bg-slate-500/10 text-slate-700'
       }`}>
         {isFlagged ? 'Flagged' : 'Active'}
       </span>
@@ -106,8 +106,8 @@ export default function RecommendationCard({
           <span
             className={`px-2 py-1 rounded text-xs font-medium transition-smooth ${
               recommendation.eligibility_met
-                ? 'bg-green-900/30 text-green-400'
-                : 'bg-red-900/30 text-red-400'
+                ? 'bg-slate-500/10 text-slate-700'
+                : 'bg-red-500/10 text-red-700'
             }`}
           >
             {recommendation.eligibility_met ? 'Met' : 'Not Met'}
@@ -134,7 +134,7 @@ export default function RecommendationCard({
               </button>
               <button
                 onClick={() => setShowFlagModal(true)}
-                className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-smooth"
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-smooth"
               >
                 Flag
               </button>
@@ -252,7 +252,7 @@ export default function RecommendationCard({
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleFlag}
-                  className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-smooth"
+                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-smooth"
                 >
                   Flag for Review
                 </button>

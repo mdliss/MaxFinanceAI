@@ -34,16 +34,16 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Link
-            href="/operator"
+            href="/login"
             className="btn-accent transition-smooth block"
           >
-            Operator Dashboard
+            User Dashboard
           </Link>
           <Link
-            href="/profile"
+            href="/operator"
             className="btn-secondary transition-smooth block"
           >
-            User Profile
+            Operator Dashboard
           </Link>
         </div>
 

@@ -34,18 +34,18 @@ export default function AuditLog({ userId }: AuditLogProps) {
   const getActionBadge = (action: string) => {
     const actionLower = action.toLowerCase();
     if (actionLower.includes('approve')) {
-      return <span className="px-2 py-1 bg-green-900/30 text-green-400 rounded text-xs transition-smooth">Approve</span>;
+      return <span className="px-2 py-1 bg-slate-500/10 text-slate-700 rounded text-xs transition-smooth">Approve</span>;
     }
     if (actionLower.includes('flag')) {
-      return <span className="px-2 py-1 bg-orange-900/30 text-orange-400 rounded text-xs transition-smooth">Flag</span>;
+      return <span className="px-2 py-1 bg-red-500/10 text-red-700 rounded text-xs transition-smooth">Flag</span>;
     }
     if (actionLower.includes('override')) {
-      return <span className="px-2 py-1 bg-blue-900/30 text-blue-400 rounded text-xs transition-smooth">Override</span>;
+      return <span className="px-2 py-1 bg-blue-500/10 text-blue-700 rounded text-xs transition-smooth">Override</span>;
     }
     if (actionLower.includes('reject')) {
-      return <span className="px-2 py-1 bg-red-900/30 text-red-400 rounded text-xs transition-smooth">Reject</span>;
+      return <span className="px-2 py-1 bg-gray-500/10 text-gray-600 rounded text-xs transition-smooth">Reject</span>;
     }
-    return <span className="px-2 py-1 bg-gray-700/30 text-gray-400 rounded text-xs transition-smooth">{action}</span>;
+    return <span className="px-2 py-1 bg-gray-500/10 text-gray-600 rounded text-xs transition-smooth">{action}</span>;
   };
 
   return (
