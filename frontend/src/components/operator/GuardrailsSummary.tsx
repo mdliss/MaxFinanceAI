@@ -49,61 +49,61 @@ export default function GuardrailsSummary() {
   };
 
   if (loading) {
-    return <div className="text-center py-12 text-gray-500">Loading guardrails...</div>;
+    return <div className="text-center py-12 text-[var(--text-secondary)]">Loading guardrails...</div>;
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div>
+      <div className="card-dark border border-red-500 p-4 text-red-400 transition-smooth">{error}</div>
     );
   }
 
   if (!summary) {
-    return <div className="text-center py-12 text-gray-500">No guardrails data found</div>;
+    return <div className="text-center py-12 text-[var(--text-secondary)]">No guardrails data found</div>;
   }
 
   return (
     <div className="space-y-6">
       {/* Guardrails Stats */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">{summary.message}</h2>
+      <div className="card-dark p-6 border-l-4 border-green-500 transition-smooth">
+        <h2 className="text-lg font-semibold mb-4">{summary.message}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-blue-600">{summary.guardrails.user_eligibility_rules.minimum_age}</div>
-            <div className="text-xs text-gray-600 mt-1">Minimum Age</div>
+          <div className="bg-[var(--bg-secondary)] rounded-lg p-4 border border-[var(--border-color)] transition-smooth hover:border-blue-500">
+            <div className="text-2xl font-bold text-blue-400">{summary.guardrails.user_eligibility_rules.minimum_age}</div>
+            <div className="text-xs text-[var(--text-muted)] mt-1">Minimum Age</div>
           </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-purple-600">{summary.guardrails.tone_guardrails.prohibited_tone_patterns_count}</div>
-            <div className="text-xs text-gray-600 mt-1">Tone Patterns</div>
+          <div className="bg-[var(--bg-secondary)] rounded-lg p-4 border border-[var(--border-color)] transition-smooth hover:border-purple-500">
+            <div className="text-2xl font-bold text-purple-400">{summary.guardrails.tone_guardrails.prohibited_tone_patterns_count}</div>
+            <div className="text-xs text-[var(--text-muted)] mt-1">Tone Patterns</div>
           </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-orange-600">{summary.guardrails.content_safety_rules.prohibited_patterns.length}</div>
-            <div className="text-xs text-gray-600 mt-1">Prohibited Content</div>
+          <div className="bg-[var(--bg-secondary)] rounded-lg p-4 border border-[var(--border-color)] transition-smooth hover:border-orange-500">
+            <div className="text-2xl font-bold text-orange-400">{summary.guardrails.content_safety_rules.prohibited_patterns.length}</div>
+            <div className="text-xs text-[var(--text-muted)] mt-1">Prohibited Content</div>
           </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-green-600">{summary.guardrails.rate_limits.max_per_day}</div>
-            <div className="text-xs text-gray-600 mt-1">Max Per Day</div>
+          <div className="bg-[var(--bg-secondary)] rounded-lg p-4 border border-[var(--border-color)] transition-smooth hover:border-green-500">
+            <div className="text-2xl font-bold text-green-400">{summary.guardrails.rate_limits.max_per_day}</div>
+            <div className="text-xs text-[var(--text-muted)] mt-1">Max Per Day</div>
           </div>
         </div>
       </div>
 
       {/* Tone Validation Tool */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Tone Validation Tool</h3>
-        <p className="text-sm text-gray-600 mb-4">
+      <div className="card-dark p-6 transition-smooth">
+        <h3 className="text-lg font-semibold mb-4">Tone Validation Tool</h3>
+        <p className="text-sm text-[var(--text-secondary)] mb-4">
           Check if recommendation text meets tone guardrails (empowering, non-judgmental language)
         </p>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
               Text to Validate
             </label>
             <textarea
               value={toneText}
               onChange={(e) => setToneText(e.target.value)}
               placeholder="Enter recommendation text to check tone..."
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg resize-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-[var(--accent-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] transition-smooth"
               rows={6}
             />
           </div>
@@ -112,7 +112,7 @@ export default function GuardrailsSummary() {
             <button
               onClick={handleToneCheck}
               disabled={checkingTone || !toneText.trim()}
-              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="btn-accent disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
             >
               {checkingTone ? 'Checking...' : 'Check Tone'}
             </button>
@@ -121,7 +121,7 @@ export default function GuardrailsSummary() {
                 setToneText('');
                 setToneResult(null);
               }}
-              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              className="btn-secondary transition-smooth"
             >
               Clear
             </button>
@@ -129,19 +129,19 @@ export default function GuardrailsSummary() {
 
           {/* Tone Check Result */}
           {toneResult && (
-            <div className="mt-6">
+            <div className="mt-6 transition-smooth">
               <div
-                className={`p-4 rounded-lg border-2 ${
+                className={`p-4 rounded-lg border-2 transition-smooth ${
                   toneResult.valid
-                    ? 'bg-green-50 border-green-300'
-                    : 'bg-red-50 border-red-300'
+                    ? 'bg-green-900/20 border-green-500'
+                    : 'bg-red-900/20 border-red-500'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">{toneResult.valid ? '✓' : '✗'}</span>
                   <span
                     className={`font-semibold ${
-                      toneResult.valid ? 'text-green-800' : 'text-red-800'
+                      toneResult.valid ? 'text-green-400' : 'text-red-400'
                     }`}
                   >
                     {toneResult.valid ? 'Tone Check Passed' : 'Tone Violations Detected'}
@@ -151,19 +151,19 @@ export default function GuardrailsSummary() {
                 {/* Violations */}
                 {toneResult.violations.length > 0 && (
                   <div className="space-y-3">
-                    <h4 className="font-medium text-red-900">Violations:</h4>
+                    <h4 className="font-medium text-red-400">Violations:</h4>
                     {toneResult.violations.map((violation, idx) => (
-                      <div key={idx} className="bg-white rounded p-3 border border-red-200">
+                      <div key={idx} className="bg-[var(--bg-secondary)] rounded p-3 border border-red-500 transition-smooth hover:border-red-400">
                         <div className="flex items-start gap-2">
-                          <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                          <span className="px-2 py-1 bg-red-900/30 text-red-400 rounded text-xs font-medium transition-smooth">
                             {violation.category}
                           </span>
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900 mb-1">
+                            <div className="text-sm font-medium mb-1">
                               Pattern: {violation.pattern}
                             </div>
                             {violation.matches.length > 0 && (
-                              <div className="text-xs text-red-700">
+                              <div className="text-xs text-red-400">
                                 Matches: {violation.matches.join(', ')}
                               </div>
                             )}
@@ -177,11 +177,11 @@ export default function GuardrailsSummary() {
                 {/* Suggestions */}
                 {toneResult.suggestions.length > 0 && (
                   <div className="mt-4">
-                    <h4 className="font-medium text-blue-900 mb-2">Suggestions:</h4>
+                    <h4 className="font-medium text-[var(--accent-primary)] mb-2">Suggestions:</h4>
                     <ul className="space-y-1">
                       {toneResult.suggestions.map((suggestion, idx) => (
-                        <li key={idx} className="text-sm text-blue-800 flex items-start gap-2">
-                          <span className="text-blue-500">•</span>
+                        <li key={idx} className="text-sm text-[var(--text-secondary)] flex items-start gap-2">
+                          <span className="text-[var(--accent-primary)]">•</span>
                           <span>{suggestion}</span>
                         </li>
                       ))}
@@ -195,14 +195,14 @@ export default function GuardrailsSummary() {
       </div>
 
       {/* Content Safety Rules */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="card-dark p-6 transition-smooth">
+        <h3 className="text-lg font-semibold mb-4">
           Prohibited Content Patterns ({summary.guardrails.content_safety_rules.prohibited_patterns.length})
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-60 overflow-y-auto">
           {summary.guardrails.content_safety_rules.prohibited_patterns.map((pattern, idx) => (
-            <div key={idx} className="bg-red-50 border border-red-200 rounded px-3 py-2 text-sm">
-              <span className="text-red-800">{pattern}</span>
+            <div key={idx} className="bg-red-900/20 border border-red-500 rounded px-3 py-2 text-sm transition-smooth hover:bg-red-900/30 hover:border-red-400">
+              <span className="text-red-400">{pattern}</span>
             </div>
           ))}
         </div>
@@ -210,27 +210,27 @@ export default function GuardrailsSummary() {
 
       {/* Tone Guardrails */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="card-dark p-6 transition-smooth">
+          <h3 className="text-lg font-semibold mb-4">
             Prohibited Tone Examples
           </h3>
           <div className="space-y-2">
             {summary.guardrails.tone_guardrails.examples_prohibited.map((pattern, idx) => (
-              <div key={idx} className="bg-red-50 border border-red-200 rounded px-3 py-2 text-sm">
-                <span className="text-red-800">{pattern}</span>
+              <div key={idx} className="bg-red-900/20 border border-red-500 rounded px-3 py-2 text-sm transition-smooth hover:bg-red-900/30 hover:border-red-400">
+                <span className="text-red-400">{pattern}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="card-dark p-6 transition-smooth">
+          <h3 className="text-lg font-semibold mb-4">
             Encouraged Tone Examples
           </h3>
           <div className="space-y-2">
             {summary.guardrails.tone_guardrails.examples_encouraged.map((pattern, idx) => (
-              <div key={idx} className="bg-green-50 border border-green-200 rounded px-3 py-2 text-sm">
-                <span className="text-green-800">{pattern}</span>
+              <div key={idx} className="bg-green-900/20 border border-green-500 rounded px-3 py-2 text-sm transition-smooth hover:bg-green-900/30 hover:border-green-400">
+                <span className="text-green-400">{pattern}</span>
               </div>
             ))}
           </div>

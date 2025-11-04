@@ -301,8 +301,8 @@ export default function ImprovedRecommendationQueue() {
 
       {/* Details Modal */}
       {selectedRec && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-smooth">
-          <div className="bg-[var(--bg-card)] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto border border-[var(--border-color)] shadow-2xl">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm modal-backdrop">
+          <div className="bg-[var(--bg-card)] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto border border-[var(--border-color)] shadow-2xl modal-content">
             <div className="p-6 border-b border-[var(--border-color)] flex items-center justify-between sticky top-0 bg-[var(--bg-card)] z-10">
               <h2 className="text-2xl font-bold">Recommendation Details</h2>
               <button

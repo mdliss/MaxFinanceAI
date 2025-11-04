@@ -95,11 +95,12 @@ export default function UserProfile({ userId }: UserProfileProps) {
             <button
               key={section.id}
               onClick={() => setActiveSection(section.id)}
+              style={activeSection === section.id ? {transform: 'scale(1.05)'} : {}}
               className={`
                 px-6 py-3 text-sm font-medium rounded-t-lg transition-smooth
                 ${
                   activeSection === section.id
-                    ? 'bg-[var(--accent-primary)] text-[var(--bg-primary)]'
+                    ? 'bg-[var(--accent-primary)] text-[var(--bg-primary)] shadow-lg'
                     : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]'
                 }
               `}

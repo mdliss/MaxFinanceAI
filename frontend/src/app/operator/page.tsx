@@ -41,7 +41,7 @@ export default function OperatorDashboard() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Tabs */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-2 mb-6 drop-in-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -65,7 +65,7 @@ export default function OperatorDashboard() {
             {/* Overview Tab */}
             {activeTab === 'overview' && (
               <div>
-                <div className="mb-6">
+                <div className="mb-6 drop-in-2">
                   <h2 className="text-2xl font-semibold mb-2">
                     System Overview
                   </h2>
@@ -80,7 +80,7 @@ export default function OperatorDashboard() {
             {/* Recommendations Tab */}
             {activeTab === 'recommendations' && (
               <div>
-                <div className="mb-6">
+                <div className="mb-6 drop-in-2">
                   <h2 className="text-2xl font-semibold mb-2">
                     Recommendation Queue
                   </h2>
@@ -88,14 +88,16 @@ export default function OperatorDashboard() {
                     Review, approve, or flag recommendations before they're delivered to users
                   </p>
                 </div>
-                <ImprovedRecommendationQueue />
+                <div className="drop-in-3">
+                  <ImprovedRecommendationQueue />
+                </div>
               </div>
             )}
 
             {/* Users Tab */}
             {activeTab === 'users' && (
               <div>
-                <div className="mb-6">
+                <div className="mb-6 drop-in-2">
                   <h2 className="text-2xl font-semibold mb-2">
                     User Management
                   </h2>
@@ -104,17 +106,19 @@ export default function OperatorDashboard() {
                   </p>
                 </div>
 
-                <UserSearch
-                  onUserSelect={setSelectedUserId}
-                  selectedUserId={selectedUserId}
-                />
+                <div className="drop-in-3">
+                  <UserSearch
+                    onUserSelect={setSelectedUserId}
+                    selectedUserId={selectedUserId}
+                  />
+                </div>
 
                 {selectedUserId ? (
-                  <div className="mt-6">
+                  <div className="mt-6 drop-in-4">
                     <UserProfile userId={selectedUserId} />
                   </div>
                 ) : (
-                  <div className="mt-6 card-dark p-12 text-center transition-smooth">
+                  <div className="mt-6 card-dark p-12 text-center transition-smooth drop-in-4">
                     <p className="text-[var(--text-secondary)]">
                       Search and select a user to view their profile
                     </p>
@@ -126,7 +130,7 @@ export default function OperatorDashboard() {
             {/* Audit Log Tab */}
             {activeTab === 'audit' && (
               <div>
-                <div className="mb-6">
+                <div className="mb-6 drop-in-2">
                   <h2 className="text-2xl font-semibold mb-2">
                     System Audit Log
                   </h2>
@@ -134,14 +138,16 @@ export default function OperatorDashboard() {
                     Track all operator actions, consent changes, and system events for compliance
                   </p>
                 </div>
-                <AuditLog userId={selectedUserId} />
+                <div className="drop-in-3">
+                  <AuditLog userId={selectedUserId} />
+                </div>
               </div>
             )}
           </div>
         </div>
 
         {/* Help Section */}
-        <div className="card-dark p-6 border-l-4 border-[var(--accent-primary)] transition-smooth">
+        <div key={activeTab} className="card-dark p-6 border-l-4 border-[var(--accent-primary)] transition-smooth drop-in-4">
           <h3 className="font-semibold mb-4 text-lg">Quick Guide</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
             <div>

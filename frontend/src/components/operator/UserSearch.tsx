@@ -73,7 +73,7 @@ export default function UserSearch({ onUserSelect, selectedUserId }: UserSearchP
 
         {/* Dropdown */}
         {showDropdown && searchTerm && (
-          <div className="absolute z-10 w-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-2xl max-h-60 overflow-auto">
+          <div className="absolute z-10 w-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-2xl max-h-60 overflow-auto dropdown-enter">
             {loading ? (
               <div className="px-4 py-3 text-sm text-[var(--text-secondary)]">Loading...</div>
             ) : error ? (

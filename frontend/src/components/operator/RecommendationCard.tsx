@@ -145,8 +145,8 @@ export default function RecommendationCard({
 
       {/* Override Modal */}
       {showOverrideModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-smooth">
-          <div className="bg-[var(--bg-card)] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border-color)] shadow-2xl">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm modal-backdrop">
+          <div className="bg-[var(--bg-card)] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border-color)] shadow-2xl modal-content">
             <div className="p-6">
               <h3 className="text-lg font-semibold mb-4">Override Recommendation</h3>
 
@@ -218,8 +218,8 @@ export default function RecommendationCard({
 
       {/* Flag Modal */}
       {showFlagModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-smooth">
-          <div className="bg-[var(--bg-card)] rounded-lg max-w-lg w-full border border-[var(--border-color)] shadow-2xl">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm modal-backdrop">
+          <div className="bg-[var(--bg-card)] rounded-lg max-w-lg w-full border border-[var(--border-color)] shadow-2xl modal-content">
             <div className="p-6">
               <h3 className="text-lg font-semibold mb-4">Flag Recommendation</h3>
 

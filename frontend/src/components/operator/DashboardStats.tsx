@@ -78,7 +78,7 @@ export default function DashboardStats() {
   return (
     <div>
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 drop-in-3">
         {/* Needs Review */}
         <div className="card-dark p-6 border-l-4 border-red-500 transition-smooth">
           <p className="text-sm font-medium text-[var(--text-secondary)]">Needs Review</p>
@@ -115,7 +115,7 @@ export default function DashboardStats() {
       </div>
 
       {/* Workflow Guide */}
-      <div className="card-dark p-6 mb-6 border-l-4 border-[var(--accent-primary)] transition-smooth">
+      <div className="card-dark p-6 mb-6 border-l-4 border-[var(--accent-primary)] transition-smooth drop-in-4">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold">Operator Workflow</h3>
@@ -171,7 +171,7 @@ export default function DashboardStats() {
       </div>
 
       {/* Additional Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 drop-in-5">
         <div className="card-dark p-4 transition-smooth">
           <p className="text-sm text-[var(--text-secondary)]">Total Recommendations</p>
           <p className="text-2xl font-bold mt-1">
