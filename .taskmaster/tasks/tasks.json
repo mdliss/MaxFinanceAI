@@ -1,0 +1,243 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Project Environment",
+        "description": "Initialize the development environment for SpendSense.",
+        "details": "Set up a new project using Docker for containerization. Use Python FastAPI for the backend and React with Next.js for the frontend. Ensure SQLite is configured for local database management.",
+        "testStrategy": "Verify that the Docker container builds successfully and the application starts with a single command. Ensure all dependencies are correctly installed.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Generate Synthetic Data",
+        "description": "Create a system to generate synthetic transaction data matching Plaid API structure.",
+        "details": "Implement a Python script to generate 50-100 synthetic users with diverse financial profiles. Ensure data includes checking, savings, credit card, money market, and HSA accounts. Use deterministic generation with seed values and export data to CSV/JSON.",
+        "testStrategy": "Validate that the generated data matches the Plaid schema and includes 180-day transaction history for all users. Check for diversity in financial behaviors.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Implement Consent Management System",
+        "description": "Develop a system to manage user consent for data processing.",
+        "details": "Create endpoints to handle user consent using FastAPI. Implement database tables to track consent status and timestamps. Ensure consent is required before any data processing.",
+        "testStrategy": "Test that users cannot proceed without providing consent. Verify that consent can be revoked and processing stops immediately.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Develop Behavioral Signal Detection",
+        "description": "Create a module to detect financial behavior signals from transaction data.",
+        "details": "Implement algorithms to compute signals such as subscription detection, savings growth, credit utilization, and income stability. Ensure calculations are deterministic and handle missing data gracefully.",
+        "testStrategy": "Run tests to ensure signals are detected accurately and within performance constraints (<1 second per user). Validate edge cases.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Develop Subscription Detection Algorithm",
+            "description": "Create an algorithm to detect recurring subscription payments from transaction data.",
+            "dependencies": [],
+            "details": "Implement logic to identify patterns in transaction data that indicate recurring subscriptions. Handle various frequencies and amounts, and ensure the algorithm can adapt to changes in subscription patterns.",
+            "status": "done",
+            "testStrategy": "Test with datasets containing known subscriptions to validate detection accuracy."
+          },
+          {
+            "id": 2,
+            "title": "Develop Savings Growth Detection Algorithm",
+            "description": "Create an algorithm to detect growth in savings from transaction data.",
+            "dependencies": [],
+            "details": "Design an algorithm to analyze transaction data for patterns indicating savings growth. Consider factors like regular deposits, interest accrual, and account balance trends. Ensure the algorithm is robust against fluctuations.",
+            "status": "done",
+            "testStrategy": "Test with historical data to ensure accurate detection of savings growth trends."
+          },
+          {
+            "id": 3,
+            "title": "Develop Credit Utilization Detection Algorithm",
+            "description": "Create an algorithm to detect credit utilization patterns from transaction data.",
+            "dependencies": [],
+            "details": "Implement logic to calculate credit utilization rates from transaction data. Consider credit limits, spending patterns, and payment behaviors. Ensure calculations are accurate and handle missing data gracefully.",
+            "status": "done",
+            "testStrategy": "Validate against known credit utilization scenarios to ensure accuracy."
+          },
+          {
+            "id": 4,
+            "title": "Develop Income Stability Detection Algorithm",
+            "description": "Create an algorithm to detect income stability from transaction data.",
+            "dependencies": [],
+            "details": "Design an algorithm to assess income stability by analyzing transaction data for regular income deposits and variability. Ensure the algorithm can handle irregular income patterns and missing data.",
+            "status": "done",
+            "testStrategy": "Test with datasets containing varied income patterns to ensure stability detection is reliable."
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Build Persona Assignment System",
+        "description": "Assign financial personas to users based on detected signals.",
+        "details": "Define criteria for each persona and implement logic to assign personas based on signal data. Prioritize personas when multiple criteria are met. Store assignments in the database.",
+        "testStrategy": "Verify that personas are assigned correctly and deterministically. Check that prioritization logic resolves multi-persona cases accurately.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Create Recommendation Engine",
+        "description": "Develop an engine to generate personalized educational recommendations.",
+        "details": "Implement logic to generate 3-5 educational items per user. Include eligibility checks and plain-language rationales. Use a template for rationale format and ensure all recommendations cite specific data.",
+        "testStrategy": "Ensure all recommendations include a rationale and meet eligibility criteria. Validate that content is at an 8th-grade reading level.",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement Consent & Guardrails System",
+        "description": "Ensure recommendations respect user consent and eligibility guardrails.",
+        "details": "Integrate consent checks into the recommendation process. Implement eligibility checks to prevent ineligible offers. Develop tone guardrails to ensure recommendations are empowering and non-judgmental.",
+        "testStrategy": "Test that no recommendations are generated without active consent. Verify that ineligible offers are filtered out and tone checks catch problematic language.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          6
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Develop Operator Dashboard",
+        "description": "Create a dashboard for operators to review and manage recommendations.",
+        "details": "Build a React-based interface for operators to view user profiles, signals, persona assignments, and recommendations. Include functionality to approve, override, or flag recommendations.",
+        "testStrategy": "Test that operators can access all necessary information and perform actions within 5 seconds. Ensure all actions are logged.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Implement Evaluation & Metrics Harness",
+        "description": "Create a system to evaluate and report on system performance and fairness.",
+        "details": "Develop an automated pipeline to compute metrics such as coverage, explainability, relevance, and latency. Generate summary reports and ensure deterministic evaluation.",
+        "testStrategy": "Run the evaluation pipeline and verify that all target metrics are met. Check that reports are generated correctly and metrics are exportable.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Design Database Schema",
+        "description": "Create the database schema to support SpendSense functionalities.",
+        "details": "Design and implement the SQLite schema as specified in the PRD. Ensure tables for users, accounts, transactions, liabilities, signals, personas, recommendations, and audit logs are created with appropriate relationships.",
+        "testStrategy": "Verify that the database schema supports all required operations and maintains data integrity. Test CRUD operations for each table.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Develop API Endpoints",
+        "description": "Implement API endpoints for user management, data processing, and recommendations.",
+        "details": "Create endpoints using FastAPI for user management, signal processing, persona assignment, and recommendation retrieval. Ensure endpoints are secure and performant.",
+        "testStrategy": "Test each endpoint for correct functionality and response times. Validate that endpoints handle edge cases and errors gracefully.",
+        "priority": "medium",
+        "dependencies": [
+          10
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Setup Frontend Interface",
+        "description": "Develop the frontend interface for SpendSense using React and Next.js.",
+        "details": "Create a responsive UI using Tailwind CSS. Implement pages for user consent, profile viewing, and operator dashboard. Ensure seamless integration with backend APIs.",
+        "testStrategy": "Test the frontend for usability and responsiveness. Verify that all components render correctly and interact with the backend as expected.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "Implement Testing Framework",
+        "description": "Set up testing frameworks for both frontend and backend.",
+        "details": "Use pytest for backend unit and integration tests. Implement Vitest for React component testing. Ensure comprehensive test coverage for all critical functionalities.",
+        "testStrategy": "Run all tests and ensure they pass. Verify that tests cover edge cases and critical paths.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "Deploy Application",
+        "description": "Deploy the SpendSense application using Docker.",
+        "details": "Configure Docker for deployment. Ensure the application can be started with a single command using docker-compose. Document deployment steps in the README.",
+        "testStrategy": "Test the deployment process to ensure the application starts correctly and all services are operational. Verify that the environment is consistent with development.",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          12
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "Conduct Risk Mitigation Testing",
+        "description": "Test the system for potential risks identified in the PRD.",
+        "details": "Perform tests to ensure inappropriate recommendations are not generated. Validate synthetic data against real patterns. Test performance with 100+ users and consent tracking reliability.",
+        "testStrategy": "Run risk mitigation tests and verify that all identified risks are addressed. Ensure comprehensive logging and monitoring for ongoing risk management.",
+        "priority": "medium",
+        "dependencies": [
+          13
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-11-03T22:06:16.223Z",
+      "updated": "2025-11-03T23:49:26.618Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
