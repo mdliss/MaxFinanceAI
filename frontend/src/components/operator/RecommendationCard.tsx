@@ -35,8 +35,8 @@ export default function RecommendationCard({
   const getStatusBadge = () => {
     const isFlagged = recommendation.approval_status === 'flagged';
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-        isFlagged ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'
+      <span className={`px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
+        isFlagged ? 'bg-orange-900/30 text-orange-400' : 'bg-green-900/30 text-green-400'
       }`}>
         {isFlagged ? 'Flagged' : 'Active'}
       </span>
@@ -66,15 +66,15 @@ export default function RecommendationCard({
 
   return (
     <>
-      <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+      <div className="card-dark p-6 transition-smooth">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold text-gray-900">{recommendation.title}</h3>
+              <h3 className="text-lg font-semibold">{recommendation.title}</h3>
               {getStatusBadge()}
             </div>
-            <div className="flex gap-4 text-xs text-gray-500">
+            <div className="flex gap-4 text-xs text-[var(--text-muted)]">
               <span>ID: {recommendation.recommendation_id}</span>
               <span>User: {recommendation.user_id}</span>
               <span>Persona: {recommendation.persona_type}</span>
@@ -83,31 +83,31 @@ export default function RecommendationCard({
           </div>
           <button
             onClick={() => setShowActions(!showActions)}
-            className="text-gray-400 hover:text-gray-600 p-2"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] p-2 transition-smooth"
           >
-            ⋮
+            &vellip;
           </button>
         </div>
 
         {/* Description */}
         {recommendation.description && (
-          <p className="text-gray-700 mb-3">{recommendation.description}</p>
+          <p className="text-[var(--text-secondary)] mb-3">{recommendation.description}</p>
         )}
 
         {/* Rationale */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-          <div className="text-xs font-medium text-blue-900 mb-1">Rationale:</div>
-          <p className="text-sm text-blue-800">{recommendation.rationale}</p>
+        <div className="bg-[var(--bg-secondary)] border border-blue-500 rounded-lg p-3 mb-3 transition-smooth">
+          <div className="text-xs font-medium text-blue-400 mb-1">Rationale:</div>
+          <p className="text-sm text-[var(--text-secondary)]">{recommendation.rationale}</p>
         </div>
 
         {/* Eligibility */}
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs font-medium text-gray-600">Eligibility:</span>
+          <span className="text-xs font-medium text-[var(--text-secondary)]">Eligibility:</span>
           <span
-            className={`px-2 py-1 rounded text-xs font-medium ${
+            className={`px-2 py-1 rounded text-xs font-medium transition-smooth ${
               recommendation.eligibility_met
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
+                ? 'bg-green-900/30 text-green-400'
+                : 'bg-red-900/30 text-red-400'
             }`}
           >
             {recommendation.eligibility_met ? 'Met' : 'Not Met'}
@@ -116,27 +116,27 @@ export default function RecommendationCard({
 
         {/* Operator Notes */}
         {recommendation.operator_notes && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
-            <div className="text-xs font-medium text-gray-700 mb-1">Operator Notes:</div>
-            <p className="text-sm text-gray-600">{recommendation.operator_notes}</p>
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg p-3 mb-3 transition-smooth">
+            <div className="text-xs font-medium text-[var(--text-secondary)] mb-1">Operator Notes:</div>
+            <p className="text-sm text-[var(--text-secondary)]">{recommendation.operator_notes}</p>
           </div>
         )}
 
         {/* Action Buttons */}
         {showActions && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
             <div className="flex gap-2">
               <button
                 onClick={() => setShowOverrideModal(true)}
-                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                className="flex-1 btn-accent transition-smooth"
               >
-                ✎ Override
+                Override
               </button>
               <button
                 onClick={() => setShowFlagModal(true)}
-                className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors"
+                className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-smooth"
               >
-                ⚑ Flag
+                Flag
               </button>
             </div>
           </div>
@@ -145,53 +145,53 @@ export default function RecommendationCard({
 
       {/* Override Modal */}
       {showOverrideModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-smooth">
+          <div className="bg-[var(--bg-card)] rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border-color)] shadow-2xl">
             <div className="p-6">
               <h3 className="text-lg font-semibold mb-4">Override Recommendation</h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Title</label>
                   <input
                     type="text"
                     value={overrideTitle}
                     onChange={(e) => setOverrideTitle(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg focus:ring-2 focus:ring-[var(--accent-primary)] transition-smooth text-[var(--text-primary)]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
                     Description
                   </label>
                   <textarea
                     value={overrideDescription}
                     onChange={(e) => setOverrideDescription(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none"
+                    className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg resize-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-smooth text-[var(--text-primary)]"
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rationale</label>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Rationale</label>
                   <textarea
                     value={overrideRationale}
                     onChange={(e) => setOverrideRationale(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none"
+                    className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg resize-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-smooth text-[var(--text-primary)]"
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
                     Override Notes
                   </label>
                   <textarea
                     value={overrideNotes}
                     onChange={(e) => setOverrideNotes(e.target.value)}
                     placeholder="Explain why you're overriding..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none"
+                    className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg resize-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-smooth text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                     rows={2}
                   />
                 </div>
@@ -200,13 +200,13 @@ export default function RecommendationCard({
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleOverride}
-                  className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                  className="flex-1 btn-accent transition-smooth"
                 >
                   Save Override
                 </button>
                 <button
                   onClick={() => setShowOverrideModal(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                  className="flex-1 btn-secondary transition-smooth"
                 >
                   Cancel
                 </button>
@@ -218,18 +218,18 @@ export default function RecommendationCard({
 
       {/* Flag Modal */}
       {showFlagModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-lg w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-smooth">
+          <div className="bg-[var(--bg-card)] rounded-lg max-w-lg w-full border border-[var(--border-color)] shadow-2xl">
             <div className="p-6">
               <h3 className="text-lg font-semibold mb-4">Flag Recommendation</h3>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Severity</label>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Severity</label>
                   <select
                     value={flagSeverity}
                     onChange={(e) => setFlagSeverity(e.target.value as 'low' | 'medium' | 'high')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg focus:ring-2 focus:ring-[var(--accent-primary)] transition-smooth text-[var(--text-primary)]"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -238,12 +238,12 @@ export default function RecommendationCard({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                  <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Reason</label>
                   <textarea
                     value={flagReason}
                     onChange={(e) => setFlagReason(e.target.value)}
                     placeholder="Describe the issue..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none"
+                    className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg resize-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-smooth text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                     rows={4}
                   />
                 </div>
@@ -252,13 +252,13 @@ export default function RecommendationCard({
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleFlag}
-                  className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600"
+                  className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-smooth"
                 >
                   Flag for Review
                 </button>
                 <button
                   onClick={() => setShowFlagModal(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                  className="flex-1 btn-secondary transition-smooth"
                 >
                   Cancel
                 </button>

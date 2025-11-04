@@ -57,9 +57,9 @@ export default function DashboardStats() {
       <div className="animate-pulse">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-              <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+            <div key={i} className="card-dark p-6">
+              <div className="h-4 bg-[var(--bg-tertiary)] rounded w-1/2 mb-4"></div>
+              <div className="h-8 bg-[var(--bg-tertiary)] rounded w-3/4"></div>
             </div>
           ))}
         </div>
@@ -80,83 +80,55 @@ export default function DashboardStats() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Needs Review */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Needs Review</p>
-              <p className="text-3xl font-bold text-red-600 mt-1">{reviewCount}</p>
-              <p className="text-xs text-gray-500 mt-1">Flagged for attention</p>
-            </div>
-            <div className="text-red-500 text-4xl">🚩</div>
-          </div>
+        <div className="card-dark p-6 border-l-4 border-red-500 transition-smooth">
+          <p className="text-sm font-medium text-[var(--text-secondary)]">Needs Review</p>
+          <p className="text-3xl font-bold text-red-500 mt-1">{reviewCount}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">Flagged for attention</p>
         </div>
 
         {/* Pending */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-yellow-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending</p>
-              <p className="text-3xl font-bold text-yellow-600 mt-1">{pendingCount}</p>
-              <p className="text-xs text-gray-500 mt-1">Awaiting approval</p>
-            </div>
-            <div className="text-yellow-500 text-4xl">⏳</div>
-          </div>
+        <div className="card-dark p-6 border-l-4 border-yellow-500 transition-smooth">
+          <p className="text-sm font-medium text-[var(--text-secondary)]">Pending</p>
+          <p className="text-3xl font-bold text-yellow-500 mt-1">{pendingCount}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">Awaiting approval</p>
         </div>
 
         {/* Approved */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Approved</p>
-              <p className="text-3xl font-bold text-green-600 mt-1">
-                {stats.approved_recommendations}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">Ready for delivery</p>
-            </div>
-            <div className="text-green-500 text-4xl">✅</div>
-          </div>
+        <div className="card-dark p-6 border-l-4 border-green-500 transition-smooth">
+          <p className="text-sm font-medium text-[var(--text-secondary)]">Approved</p>
+          <p className="text-3xl font-bold text-green-500 mt-1">
+            {stats.approved_recommendations}
+          </p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">Ready for delivery</p>
         </div>
 
         {/* Total Users */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Active Users</p>
-              <p className="text-3xl font-bold text-blue-600 mt-1">
-                {stats.users_with_consent}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                of {stats.total_users} total
-              </p>
-            </div>
-            <div className="text-blue-500 text-4xl">👥</div>
-          </div>
+        <div className="card-dark p-6 border-l-4 border-[var(--accent-primary)] transition-smooth">
+          <p className="text-sm font-medium text-[var(--text-secondary)]">Active Users</p>
+          <p className="text-3xl font-bold text-[var(--accent-primary)] mt-1">
+            {stats.users_with_consent}
+          </p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">
+            of {stats.total_users} total
+          </p>
         </div>
       </div>
 
       {/* Workflow Guide */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg shadow-sm mb-6 border border-blue-200">
+      <div className="card-dark p-6 mb-6 border-l-4 border-[var(--accent-primary)] transition-smooth">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Operator Workflow</h3>
-            <p className="text-sm text-gray-600 mt-1">
+            <h3 className="text-lg font-semibold">Operator Workflow</h3>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
               Follow these steps to review recommendations efficiently
             </p>
           </div>
           <button
             onClick={handleAutoFlag}
             disabled={autoFlagging}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+            className="btn-accent transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {autoFlagging ? (
-              <>
-                <span className="animate-spin">⚙️</span> Auto-Flagging...
-              </>
-            ) : (
-              <>
-                <span>🤖</span> Run Auto-Flag
-              </>
-            )}
+            {autoFlagging ? 'Auto-Flagging...' : 'Run Auto-Flag'}
           </button>
         </div>
 
@@ -164,24 +136,24 @@ export default function DashboardStats() {
           {priorityQueue.workflow_steps.map((step: any) => (
             <div
               key={step.step}
-              className="bg-white p-4 rounded-lg border-2 border-blue-200"
+              className="bg-[var(--bg-secondary)] p-4 rounded-lg border-2 border-[var(--border-color)] transition-smooth hover:border-[var(--accent-primary)]"
             >
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-full bg-[var(--accent-primary)] text-[var(--bg-primary)] flex items-center justify-center font-bold">
                   {step.step}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900">{step.title}</h4>
-                  <p className="text-sm text-gray-600">
+                  <h4 className="font-semibold">{step.title}</h4>
+                  <p className="text-sm text-[var(--text-secondary)]">
                     {step.count} item{step.count !== 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
               {step.count > 0 && (
                 <div className="mt-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-[var(--bg-tertiary)] rounded-full h-2">
                     <div
-                      className={`h-2 rounded-full ${
+                      className={`h-2 rounded-full transition-smooth ${
                         step.status === 'review'
                           ? 'bg-red-500'
                           : step.status === 'pending'
@@ -200,22 +172,22 @@ export default function DashboardStats() {
 
       {/* Additional Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm">
-          <p className="text-sm text-gray-600">Total Recommendations</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">
+        <div className="card-dark p-4 transition-smooth">
+          <p className="text-sm text-[var(--text-secondary)]">Total Recommendations</p>
+          <p className="text-2xl font-bold mt-1">
             {stats.total_recommendations}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm">
-          <p className="text-sm text-gray-600">Behavioral Signals</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">
+        <div className="card-dark p-4 transition-smooth">
+          <p className="text-sm text-[var(--text-secondary)]">Behavioral Signals</p>
+          <p className="text-2xl font-bold mt-1">
             {stats.total_signals}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm">
-          <p className="text-sm text-gray-600">Recent Consent Changes</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">
-            {stats.recent_consent_changes} (7 days)
+        <div className="card-dark p-4 transition-smooth">
+          <p className="text-sm text-[var(--text-secondary)]">Recent Consent Changes</p>
+          <p className="text-2xl font-bold mt-1">
+            {stats.recent_consent_changes} <span className="text-sm text-[var(--text-muted)]">(7 days)</span>
           </p>
         </div>
       </div>
