@@ -109,3 +109,57 @@ export interface FeedbackSubmission {
   feedback_type: 'helpful' | 'not_helpful' | 'irrelevant';
   comment?: string;
 }
+
+export interface EvaluationMetrics {
+  coverage: {
+    total_users: number;
+    users_with_persona: number;
+    users_with_3plus_behaviors: number;
+    coverage_percentage: number;
+  };
+  explainability: {
+    total_recommendations: number;
+    recommendations_with_rationale: number;
+    explainability_percentage: number;
+  };
+  latency: {
+    avg_recommendation_generation_ms: number;
+    p50_ms: number;
+    p95_ms: number;
+    p99_ms: number;
+  };
+  auditability: {
+    total_recommendations: number;
+    recommendations_with_traces: number;
+    auditability_percentage: number;
+  };
+  quality: {
+    avg_behaviors_per_user: number;
+    personas_assigned: number;
+    recommendations_flagged: number;
+    flag_rate_percentage: number;
+  };
+  timestamp: string;
+}
+
+export interface DecisionTrace {
+  recommendation_id: number;
+  user_id: string;
+  signals_detected: Array<{
+    signal_type: string;
+    value: number;
+    details: any;
+  }>;
+  persona_assigned: {
+    persona_type: string;
+    criteria_met: string;
+    priority_rank: number;
+  };
+  recommendation_logic: {
+    title: string;
+    rationale: string;
+    eligibility_checks: string[];
+    tone_validated: boolean;
+  };
+  timestamp: string;
+}

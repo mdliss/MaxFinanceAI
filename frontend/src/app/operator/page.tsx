@@ -7,8 +7,9 @@ import ImprovedRecommendationQueue from '@/components/operator/ImprovedRecommend
 import UserSearch from '@/components/operator/UserSearch';
 import UserProfile from '@/components/operator/UserProfile';
 import AuditLog from '@/components/operator/AuditLog';
+import EvaluationMetrics from '@/components/operator/EvaluationMetrics';
 
-type TabType = 'overview' | 'recommendations' | 'users' | 'audit';
+type TabType = 'overview' | 'recommendations' | 'users' | 'audit' | 'metrics';
 
 export default function OperatorDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -19,6 +20,7 @@ export default function OperatorDashboard() {
     { id: 'recommendations', label: 'Queue' },
     { id: 'users', label: 'Users' },
     { id: 'audit', label: 'Audit' },
+    { id: 'metrics', label: 'Metrics' },
   ];
 
   return (
@@ -141,6 +143,13 @@ export default function OperatorDashboard() {
                 <div className="drop-in-3">
                   <AuditLog userId={selectedUserId} />
                 </div>
+              </div>
+            )}
+
+            {/* Evaluation Metrics Tab */}
+            {activeTab === 'metrics' && (
+              <div className="drop-in-2">
+                <EvaluationMetrics />
               </div>
             )}
           </div>

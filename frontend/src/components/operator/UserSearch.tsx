@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '@/lib/api';
 import type { User } from '@/types';
 
@@ -15,10 +16,25 @@ export default function UserSearch({ onUserSelect, selectedUserId }: UserSearchP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     loadUsers();
   }, []);
+
+  useEffect(() => {
+    if (showDropdown && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, [showDropdown]);
 
   const loadUsers = async () => {
     try {
@@ -48,6 +64,7 @@ export default function UserSearch({ onUserSelect, selectedUserId }: UserSearchP
         </label>
         <div className="relative">
           <input
+            ref={inputRef}
             type="text"
             value={searchTerm}
             onChange={(e) => {
@@ -55,6 +72,10 @@ export default function UserSearch({ onUserSelect, selectedUserId }: UserSearchP
               setShowDropdown(true);
             }}
             onFocus={() => setShowDropdown(true)}
+            onBlur={() => {
+              // Delay to allow click on dropdown items
+              setTimeout(() => setShowDropdown(false), 200);
+            }}
             placeholder="Search by name or user ID..."
             className="w-full px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-[var(--accent-primary)] text-[var(--text-primary)] transition-smooth placeholder:text-[var(--text-muted)]"
           />
@@ -71,9 +92,17 @@ export default function UserSearch({ onUserSelect, selectedUserId }: UserSearchP
           )}
         </div>
 
-        {/* Dropdown */}
-        {showDropdown && searchTerm && (
-          <div className="absolute z-50 w-full mt-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-2xl max-h-60 overflow-auto dropdown-enter">
+        {/* Dropdown - Rendered via Portal */}
+        {mounted && showDropdown && searchTerm && createPortal(
+          <div
+            className="fixed bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg shadow-2xl max-h-60 overflow-auto dropdown-enter"
+            style={{
+              top: `${dropdownPosition.top + 4}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`,
+              zIndex: 9999,
+            }}
+          >
             {loading ? (
               <div className="px-4 py-3 text-sm text-[var(--text-secondary)]">Loading...</div>
             ) : error ? (
@@ -84,7 +113,7 @@ export default function UserSearch({ onUserSelect, selectedUserId }: UserSearchP
               filteredUsers.map((user) => (
                 <button
                   key={user.user_id}
-                  onClick={() => {
+                  onMouseDown={() => {
                     onUserSelect(user.user_id);
                     setSearchTerm(user.name);
                     setShowDropdown(false);
@@ -98,7 +127,8 @@ export default function UserSearch({ onUserSelect, selectedUserId }: UserSearchP
                 </button>
               ))
             )}
-          </div>
+          </div>,
+          document.body
         )}
       </div>
 

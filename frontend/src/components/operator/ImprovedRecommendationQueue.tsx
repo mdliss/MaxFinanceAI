@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import type { Recommendation } from '@/types';
+import DecisionTraceModal from './DecisionTraceModal';
 
 export default function ImprovedRecommendationQueue() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
@@ -16,6 +17,8 @@ export default function ImprovedRecommendationQueue() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRec, setSelectedRec] = useState<Recommendation | null>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [showDecisionTrace, setShowDecisionTrace] = useState(false);
+  const [selectedTraceId, setSelectedTraceId] = useState<number | null>(null);
 
   useEffect(() => {
     loadRecommendations();
@@ -288,9 +291,18 @@ export default function ImprovedRecommendationQueue() {
                   )}
                   <button
                     onClick={() => viewDetails(rec)}
-                    className="btn-accent transition-smooth"
+                    className="btn-secondary transition-smooth"
                   >
                     Details
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedTraceId(rec.recommendation_id);
+                      setShowDecisionTrace(true);
+                    }}
+                    className="btn-accent transition-smooth"
+                  >
+                    Decision Trace
                   </button>
                 </div>
               </div>
@@ -363,6 +375,17 @@ export default function ImprovedRecommendationQueue() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Decision Trace Modal */}
+      {showDecisionTrace && selectedTraceId && (
+        <DecisionTraceModal
+          recommendationId={selectedTraceId}
+          onClose={() => {
+            setShowDecisionTrace(false);
+            setSelectedTraceId(null);
+          }}
+        />
       )}
     </div>
   );

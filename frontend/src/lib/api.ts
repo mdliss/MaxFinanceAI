@@ -5,7 +5,9 @@ import type {
   AuditLog,
   GuardrailSummary,
   ToneCheckResult,
-  FeedbackSubmission
+  FeedbackSubmission,
+  EvaluationMetrics,
+  DecisionTrace
 } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -152,4 +154,61 @@ export const api = {
       total_transactions: number;
       recent_consent_changes: number;
     }>('/operator/dashboard/stats'),
+
+  // Evaluation Metrics
+  getEvaluationMetrics: () =>
+    fetchAPI<EvaluationMetrics>('/operator/evaluation/metrics'),
+
+  getDecisionTrace: (recommendationId: number) =>
+    fetchAPI<DecisionTrace>(`/operator/decision-trace/${recommendationId}`),
+
+  // Accounts
+  getAccounts: (userId: string) =>
+    fetchAPI<any[]>(`/accounts/${userId}`),
+
+  getCreditUtilization: (userId: string) =>
+    fetchAPI<{
+      total_balance: number;
+      total_limit: number;
+      utilization_percentage: number;
+      accounts: any[];
+    }>(`/accounts/${userId}/credit-utilization`),
+
+  // Transactions
+  getTransactions: (userId: string, limit?: number, offset?: number) => {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (offset) params.append('offset', offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    return fetchAPI<any[]>(`/transactions/${userId}${queryString}`);
+  },
+
+  getSpendingCategories: (userId: string, days?: number) => {
+    const params = days ? `?days=${days}` : '';
+    return fetchAPI<{
+      categories: Array<{
+        category: string;
+        amount: number;
+        percentage: number;
+        transaction_count: number;
+      }>;
+      total_spending: number;
+      period_start: string;
+      period_end: string;
+    }>(`/transactions/${userId}/spending-categories${params}`);
+  },
+
+  getSavingsHistory: (userId: string, months?: number) => {
+    const params = months ? `?months=${months}` : '';
+    return fetchAPI<{
+      history: Array<{
+        date: string;
+        balance: number;
+        month: string;
+      }>;
+      growth_rate: number;
+      current_balance: number;
+      starting_balance: number;
+    }>(`/transactions/${userId}/savings-history${params}`);
+  },
 };

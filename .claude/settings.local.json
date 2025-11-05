@@ -50,7 +50,8 @@
       "Bash(npm test:*)",
       "Bash(npm run dev:*)",
       "Bash(source:*)",
-      "Bash(ps:*)"
+      "Bash(ps:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
