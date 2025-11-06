@@ -8,10 +8,13 @@ services:
     volumes:
       - ./backend:/app
       - ./data:/app/data
+      - ./.env:/app/.env
     environment:
       - DATABASE_URL=sqlite+aiosqlite:////app/data/spendsense.db
       - PYTHONUNBUFFERED=1
       - CORS_ORIGINS=http://localhost:3001
+    env_file:
+      - .env
     depends_on:
       - db-init
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

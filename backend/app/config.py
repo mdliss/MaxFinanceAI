@@ -3,7 +3,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # Database
-    database_url: str = "sqlite+aiosqlite:////app/data/spendsense.db"
+    database_url: str = "sqlite+aiosqlite:///./spendsense.db"
 
     # API
     api_v1_prefix: str = "/api/v1"
@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "SpendSense"
     debug: bool = True
+
+    # LLM Configuration
+    openai_api_key: Optional[str] = None
+    llm_provider: str = "openai"
+    llm_model: str = "gpt-4o"
+    llm_max_tokens: int = 1024
+    llm_temperature: float = 0.7
 
     class Config:
         env_file = ".env"

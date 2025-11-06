@@ -9,6 +9,13 @@ import type {
   EvaluationMetrics,
   DecisionTrace
 } from '@/types';
+import type {
+  ChatRequest,
+  ChatResponse,
+  ChatHistory,
+  FeedbackRequest,
+  FeedbackResponse
+} from '@/types/chat';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
@@ -210,5 +217,56 @@ export const api = {
       current_balance: number;
       starting_balance: number;
     }>(`/transactions/${userId}/savings-history${params}`);
+  },
+
+  // Chat/Chatbot
+  chat: {
+    /**
+     * Send a message to the financial chatbot
+     */
+    sendMessage: (userId: string, message: string, conversationId?: string) =>
+      fetchAPI<ChatResponse>('/chat/message', {
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: userId,
+          message,
+          conversation_id: conversationId,
+        } as ChatRequest),
+      }),
+
+    /**
+     * Get conversation history for a user
+     */
+    getHistory: (userId: string, limit = 50, conversationId?: string) => {
+      const params = new URLSearchParams({ limit: limit.toString() });
+      if (conversationId) params.append('conversation_id', conversationId);
+      return fetchAPI<ChatHistory>(`/chat/history/${userId}?${params.toString()}`);
+    },
+
+    /**
+     * Delete conversation history (requires confirm=true)
+     */
+    deleteHistory: (userId: string, conversationId?: string, confirm = true) => {
+      const params = new URLSearchParams({ confirm: confirm.toString() });
+      if (conversationId) params.append('conversation_id', conversationId);
+      return fetchAPI<{ deleted_count: number; message: string }>(
+        `/chat/history/${userId}?${params.toString()}`,
+        { method: 'DELETE' }
+      );
+    },
+
+    /**
+     * Submit feedback (rating) for a chat message
+     */
+    submitFeedback: (messageId: number, userId: string, rating: number, feedbackText?: string) =>
+      fetchAPI<FeedbackResponse>('/chat/feedback', {
+        method: 'POST',
+        body: JSON.stringify({
+          message_id: messageId,
+          user_id: userId,
+          rating,
+          feedback_text: feedbackText,
+        } as FeedbackRequest),
+      }),
   },
 };

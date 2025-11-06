@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api import users, consent, signals, personas, recommendations, guardrails, operator, evaluation, profiles, accounts, transactions
+from app.api import users, consent, signals, personas, recommendations, guardrails, operator, evaluation, profiles, accounts, transactions, chat
 
 api_router = APIRouter()
 
@@ -14,5 +14,6 @@ api_router.include_router(evaluation.router)
 api_router.include_router(profiles.router)
 api_router.include_router(accounts.router)
 api_router.include_router(transactions.router)
+api_router.include_router(chat.router)
 
 __all__ = ["api_router"]

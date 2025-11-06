@@ -14,6 +14,8 @@ from app.models import (
     Recommendation,
     AuditLog,
     Feedback,
+    ChatMessage,
+    ChatFeedback,
 )
 
 async def init_database():

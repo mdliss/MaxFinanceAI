@@ -21,6 +21,8 @@ class User(Base):
     signals = relationship("Signal", back_populates="user", cascade="all, delete-orphan")
     personas = relationship("Persona", back_populates="user", cascade="all, delete-orphan")
     recommendations = relationship("Recommendation", back_populates="user", cascade="all, delete-orphan")
+    chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")
+    chat_feedback = relationship("ChatFeedback", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User {self.user_id}: {self.name}>"

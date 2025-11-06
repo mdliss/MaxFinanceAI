@@ -984,10 +984,13 @@ async def get_evaluation_metrics(db: AsyncSession = Depends(get_db)):
     flag_rate_percentage = (recommendations_flagged / total_recommendations * 100) if total_recommendations > 0 else 0
 
     # Average behaviors per user
+    subquery = select(
+        Signal.user_id,
+        func.count(Signal.signal_id).label('signal_count')
+    ).group_by(Signal.user_id).subquery()
+
     result = await db.execute(
-        select(func.avg(func.count(Signal.signal_id)))
-        .select_from(Signal)
-        .group_by(Signal.user_id)
+        select(func.avg(subquery.c.signal_count))
     )
     avg_behaviors_per_user = result.scalar() or 0
 

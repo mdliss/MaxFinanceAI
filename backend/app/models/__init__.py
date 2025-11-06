@@ -7,6 +7,7 @@ from app.models.persona import Persona
 from app.models.recommendation import Recommendation
 from app.models.audit_log import AuditLog
 from app.models.feedback import Feedback
+from app.models.chat import ChatMessage, ChatFeedback
 
 __all__ = [
     "User",
@@ -18,4 +19,6 @@ __all__ = [
     "Recommendation",
     "AuditLog",
     "Feedback",
+    "ChatMessage",
+    "ChatFeedback",
 ]

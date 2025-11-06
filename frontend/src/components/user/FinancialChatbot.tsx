@@ -13,6 +13,8 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  messageId?: number; // Backend message ID for feedback
+  rating?: number; // User's rating (1-5)
 }
 
 export default function FinancialChatbot({ userId }: FinancialChatbotProps) {
@@ -22,6 +24,8 @@ export default function FinancialChatbot({ userId }: FinancialChatbotProps) {
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [conversationId, setConversationId] = useState<string | undefined>();
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -59,149 +63,7 @@ export default function FinancialChatbot({ userId }: FinancialChatbotProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const generatePersonalizedAdvice = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase();
-
-    if (!profile) {
-      return "I'm still loading your financial data. Please try again in a moment.";
-    }
-
-    // Extract financial data
-    const approvedRecs = profile.recommendations?.filter(r => r.approval_status === 'approved') || [];
-    const creditUtilSignal = profile.signals?.find(s => s.signal_type === 'credit_utilization');
-    const incomeSignal = profile.signals?.find(s => s.signal_type === 'income_stability');
-    const spendingSignal = profile.signals?.find(s => s.signal_type === 'spending_surge');
-    const subscriptionSignal = profile.signals?.find(s => s.signal_type === 'subscription_detected');
-
-    const creditBalance = creditUtilSignal?.details?.current_balance || 0;
-    const creditLimit = creditUtilSignal?.details?.credit_limit || 0;
-    const utilization = creditUtilSignal?.details?.utilization_percent || 0;
-    const avgIncome = incomeSignal?.details?.average_income || 0;
-
-    // Ask about recommendations
-    if (lowerMessage.includes('recommend') || lowerMessage.includes('advice') || lowerMessage.includes('tips') || lowerMessage.includes('suggestions')) {
-      if (approvedRecs.length === 0) {
-        return "I'm still analyzing your spending patterns to generate personalized recommendations. In the meantime, I can help with general budgeting, saving strategies, or answer questions about your current finances!";
-      }
-
-      let response = `I have ${approvedRecs.length} personalized recommendation${approvedRecs.length > 1 ? 's' : ''} for you:\n\n`;
-      approvedRecs.forEach((rec, idx) => {
-        response += `${idx + 1}. **${rec.title}** (${rec.persona_type})\n   ${rec.description}\n\n`;
-      });
-      response += `You can view full details in the "Your Recommendations" section above, or ask me about any specific recommendation!`;
-      return response;
-    }
-
-    // Ask about specific recommendation
-    approvedRecs.forEach(rec => {
-      if (lowerMessage.includes(rec.title.toLowerCase()) ||
-          lowerMessage.includes(rec.persona_type.toLowerCase())) {
-        return `**${rec.title}**\n\n${rec.description}\n\n**Why this matters:** ${rec.rationale}\n\nWould you like specific steps on how to implement this?`;
-      }
-    });
-
-    // Credit questions - use their actual data
-    if (lowerMessage.includes('credit') || lowerMessage.includes('debt') || lowerMessage.includes('balance')) {
-      if (creditUtilSignal) {
-        if (utilization > 30) {
-          const targetBalance = creditLimit * 0.3;
-          const amountToPayDown = creditBalance - targetBalance;
-          return `Looking at your account, your credit utilization is **${utilization.toFixed(1)}%** (${creditBalance.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} / ${creditLimit.toLocaleString('en-US', {style: 'currency', currency: 'USD'})}).\n\nThis is above the recommended 30% threshold. I suggest paying down **${amountToPayDown.toLocaleString('en-US', {style: 'currency', currency: 'USD'})}** to get below 30%. This will improve your credit score.\n\n💡 Tip: Pay before the statement closing date to report a lower balance.`;
-        } else {
-          return `Great news! Your credit utilization is **${utilization.toFixed(1)}%**, which is healthy (under 30%). Your current balance is ${creditBalance.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} with a ${creditLimit.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} limit.\n\nKeep up the good work! Try to pay your balance in full each month to avoid interest charges.`;
-        }
-      }
-      return "I don't see credit card data in your profile yet. Once you link your accounts, I can give you personalized credit management advice!";
-    }
-
-    // Income questions - use their actual data
-    if (lowerMessage.includes('income') || lowerMessage.includes('salary') || lowerMessage.includes('earn')) {
-      if (incomeSignal) {
-        const monthlyIncome = avgIncome;
-        const needsBudget = monthlyIncome * 0.5;
-        const wantsBudget = monthlyIncome * 0.3;
-        const savingsBudget = monthlyIncome * 0.2;
-
-        return `Based on your income data, your average monthly income is **${monthlyIncome.toLocaleString('en-US', {style: 'currency', currency: 'USD'})}**. Your status is "${incomeSignal.details.status}".\n\nI recommend the 50/30/20 budget:\n• **Needs (50%)**: ${needsBudget.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} - rent, utilities, groceries\n• **Wants (30%)**: ${wantsBudget.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} - entertainment, dining out\n• **Savings (20%)**: ${savingsBudget.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} - emergency fund, investments`;
-      }
-      return "I need your income data to provide personalized budgeting advice. Once you link your accounts, I can create a custom budget for you!";
-    }
-
-    // Spending questions - use their actual spending signals
-    if (lowerMessage.includes('spending') || lowerMessage.includes('spend') || lowerMessage.includes('expense')) {
-      if (spendingSignal) {
-        const category = spendingSignal.details?.category || 'general';
-        const amount = spendingSignal.details?.total_spent || 0;
-        const avgSpend = spendingSignal.details?.average_spending || 0;
-        const percentIncrease = ((amount - avgSpend) / avgSpend * 100).toFixed(0);
-
-        return `I detected a **spending surge** in your **${category}** category:\n\n• Recent spending: ${amount.toLocaleString('en-US', {style: 'currency', currency: 'USD'})}\n• Your average: ${avgSpend.toLocaleString('en-US', {style: 'currency', currency: 'USD'})}\n• Increase: **${percentIncrease}%**\n\n💡 Suggestion: Review your ${category} purchases and see if there are any one-time expenses or areas to cut back. The 24-hour rule can help: wait a day before purchases over $50.`;
-      }
-      return "I'm analyzing your spending patterns. Ask me about specific categories like dining, shopping, or subscriptions!";
-    }
-
-    // Subscription questions - use their actual subscriptions
-    if (lowerMessage.includes('subscription') || lowerMessage.includes('recurring')) {
-      if (subscriptionSignal) {
-        const merchant = subscriptionSignal.details?.merchant_name || 'subscription service';
-        const amount = subscriptionSignal.details?.monthly_amount || 0;
-        const annualCost = amount * 12;
-
-        return `I found a recurring subscription to **${merchant}** for ${amount.toLocaleString('en-US', {style: 'currency', currency: 'USD'})}/month (${annualCost.toLocaleString('en-US', {style: 'currency', currency: 'USD'})}/year).\n\n❓ Ask yourself:\n• Do I use this enough to justify the cost?\n• Are there cheaper alternatives?\n• Can I downgrade to a lower tier?\n\nCanceling unused subscriptions is one of the easiest ways to save money!`;
-      }
-      return "I haven't detected any subscription charges yet. Once you have recurring payments, I'll help you manage them!";
-    }
-
-    // Budget/saving questions
-    if (lowerMessage.includes('budget') || lowerMessage.includes('save') || lowerMessage.includes('saving')) {
-      if (avgIncome > 0) {
-        const monthlySavingsGoal = avgIncome * 0.2;
-        const annualSavings = monthlySavingsGoal * 12;
-        return `Based on your ${avgIncome.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} monthly income, aim to save **${monthlySavingsGoal.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} per month** (20% of income).\n\nThat's **${annualSavings.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} per year**!\n\n✅ Action steps:\n1. Set up automatic transfer to savings on payday\n2. Start with emergency fund (3-6 months expenses)\n3. Use high-yield savings account (5%+ APY)`;
-      }
-      return "I can help you create a personalized budget once I have your income information. In general, follow the 50/30/20 rule: 50% needs, 30% wants, 20% savings.";
-    }
-
-    // Emergency fund
-    if (lowerMessage.includes('emergency')) {
-      if (avgIncome > 0) {
-        const threeMonths = avgIncome * 3;
-        const sixMonths = avgIncome * 6;
-        return `Based on your income, your emergency fund should be:\n\n• **Minimum**: ${threeMonths.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} (3 months)\n• **Ideal**: ${sixMonths.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} (6 months)\n\nStart with a mini goal of $1,000, then build from there. Keep it in a high-yield savings account for easy access!`;
-      }
-      return "An emergency fund should cover 3-6 months of expenses. Start with $500-$1,000 for minor emergencies, then build up gradually!";
-    }
-
-    // Summary/overview
-    if (lowerMessage.includes('summary') || lowerMessage.includes('overview') || lowerMessage.includes('status')) {
-      let summary = `**Your Financial Snapshot**\n\n`;
-
-      if (creditUtilSignal) {
-        summary += `💳 **Credit**: ${utilization.toFixed(1)}% utilization (${utilization > 30 ? '⚠️ Above 30%' : '✅ Healthy'})\n`;
-      }
-
-      if (incomeSignal) {
-        summary += `💰 **Income**: ${avgIncome.toLocaleString('en-US', {style: 'currency', currency: 'USD'})}/mo (${incomeSignal.details.status})\n`;
-      }
-
-      if (approvedRecs.length > 0) {
-        summary += `📊 **Recommendations**: ${approvedRecs.length} personalized tip${approvedRecs.length > 1 ? 's' : ''}\n`;
-      }
-
-      summary += `\nWhat would you like to work on?`;
-      return summary;
-    }
-
-    // How to implement recommendations
-    if (lowerMessage.includes('how') || lowerMessage.includes('implement') || lowerMessage.includes('steps')) {
-      return "I can help you implement any of your recommendations! Which one would you like to tackle first? Just tell me the topic (e.g., 'credit card debt', 'budgeting', 'subscriptions').";
-    }
-
-    // Default response with context
-    return `I'm here to help with your personal finances! I can answer questions about:\n\n• Your ${approvedRecs.length} personalized recommendation${approvedRecs.length !== 1 ? 's' : ''}\n• Credit management (current: ${utilization.toFixed(1)}% utilization)\n• Budgeting with your ${avgIncome.toLocaleString('en-US', {style: 'currency', currency: 'USD'})} income\n• Spending patterns and subscriptions\n• Saving and emergency funds\n\nWhat would you like to know?`;
-  };
-
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage: Message = {
@@ -212,24 +74,70 @@ export default function FinancialChatbot({ userId }: FinancialChatbotProps) {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setLoading(true);
+    setError(null);
 
-    setTimeout(() => {
-      const advice = generatePersonalizedAdvice(input);
+    try {
+      // Call the chat API
+      const response = await api.chat.sendMessage(userId, currentInput, conversationId);
+
+      // Store conversation ID for future messages
+      if (!conversationId) {
+        setConversationId(response.conversation_id);
+      }
+
+      // Add assistant response
       const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: response.message_id.toString(),
         role: 'assistant',
-        content: advice,
-        timestamp: new Date(),
+        content: response.response,
+        timestamp: new Date(response.timestamp),
+        messageId: response.message_id, // Store for feedback
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Log response time in dev mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`💬 Chat response: ${response.response_time_ms}ms, ${response.tokens_used} tokens, ${response.model}`);
+      }
+
       setLoading(false);
       if (!isOpen) {
         setUnreadCount(c => c + 1);
       }
-    }, 800);
+    } catch (err: any) {
+      console.error('Failed to send message:', err);
+      setError(err.message || 'Failed to get response. Please try again.');
+
+      // Add error message to chat
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I'm having trouble processing your request. Please try again in a moment.",
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
+      setLoading(false);
+    }
+  };
+
+  const handleFeedback = async (messageId: number, rating: number) => {
+    try {
+      await api.chat.submitFeedback(messageId, userId, rating);
+
+      // Update message with rating
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.messageId === messageId ? { ...msg, rating } : msg
+        )
+      );
+    } catch (err) {
+      console.error('Failed to submit feedback:', err);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -308,11 +216,39 @@ export default function FinancialChatbot({ userId }: FinancialChatbotProps) {
                   }`}
                 >
                   <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
-                  <p className={`text-xs mt-2 ${
-                    message.role === 'user' ? 'text-white/70' : 'text-[var(--text-secondary)]'
-                  }`}>
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className={`text-xs ${
+                      message.role === 'user' ? 'text-white/70' : 'text-[var(--text-secondary)]'
+                    }`}>
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    {/* Feedback buttons for assistant messages */}
+                    {message.role === 'assistant' && message.messageId && !message.rating && (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleFeedback(message.messageId!, 5)}
+                          className="text-lg hover:scale-110 transition-transform"
+                          title="Helpful"
+                        >
+                          👍
+                        </button>
+                        <button
+                          onClick={() => handleFeedback(message.messageId!, 1)}
+                          className="text-lg hover:scale-110 transition-transform"
+                          title="Not helpful"
+                        >
+                          👎
+                        </button>
+                      </div>
+                    )}
+                    {/* Show checkmark if rated */}
+                    {message.rating && message.rating >= 4 && (
+                      <span className="text-xs text-green-600">✓ Helpful</span>
+                    )}
+                    {message.rating && message.rating <= 2 && (
+                      <span className="text-xs text-gray-500">✓ Feedback sent</span>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
