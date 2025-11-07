@@ -9,7 +9,7 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-echo -e "${BLUE}🚀 Starting MaxFinanceAI Application...${NC}"
+echo -e "${BLUE}🚀 Starting FinanceMaxAI Application...${NC}"
 echo ""
 
 # Check if Docker is running

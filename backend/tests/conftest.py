@@ -1,7 +1,7 @@
 import pytest
 import asyncio
 from datetime import datetime
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from app.database import Base
 from app.models import User, Recommendation
@@ -107,7 +107,7 @@ async def sample_user_no_consent(db_session):
 @pytest.fixture
 async def client():
     """Create async HTTP client for testing"""
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 
@@ -181,3 +181,45 @@ async def test_recommendation(db_session, test_user_with_consent):
     # Cleanup
     await db_session.delete(recommendation)
     await db_session.commit()
+
+
+@pytest.fixture
+def add_sufficient_transactions():
+    """Helper fixture to add sufficient transactions to a user"""
+    from app.models import Transaction, Account
+    from datetime import datetime, timedelta
+
+    async def _add_transactions(db_session, user_id: str, count: int = 12):
+        """Add transactions to a user (default 12 to exceed minimum of 10)"""
+        import uuid
+        # Create an account for the user with unique ID
+        account_unique_id = f"test_account_{user_id}_{uuid.uuid4().hex[:8]}"
+        account = Account(
+            account_id=account_unique_id,
+            user_id=user_id,
+            type="depository",
+            subtype="checking",
+            available_balance=5000.0,
+            current_balance=5000.0
+        )
+        db_session.add(account)
+        await db_session.commit()
+
+        # Add transactions
+        for i in range(count):
+            transaction = Transaction(
+                transaction_id=f"test_txn_{user_id}_{uuid.uuid4().hex[:8]}",
+                user_id=user_id,
+                account_id=account.account_id,
+                date=datetime.now() - timedelta(days=i),
+                amount=-50.0 - (i * 10),  # Varying amounts
+                merchant_name=f"Test Merchant {i}",
+                category_primary="Shopping",
+                pending=False
+            )
+            db_session.add(transaction)
+
+        await db_session.commit()
+        return account
+
+    return _add_transactions

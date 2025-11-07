@@ -23,6 +23,12 @@ class User(Base):
     recommendations = relationship("Recommendation", back_populates="user", cascade="all, delete-orphan")
     chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")
     chat_feedback = relationship("ChatFeedback", back_populates="user", cascade="all, delete-orphan")
+    # V2 Relationships
+    goals = relationship("FinancialGoal", back_populates="user", cascade="all, delete-orphan")
+    budgets = relationship("Budget", back_populates="user", cascade="all, delete-orphan")
+    alerts = relationship("Alert", back_populates="user", cascade="all, delete-orphan")
+    subscriptions = relationship("Subscription", back_populates="user", cascade="all, delete-orphan")
+    health_scores = relationship("HealthScore", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User {self.user_id}: {self.name}>"

@@ -9,7 +9,7 @@ const robotoMono = Roboto_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'SpendSense',
+  title: 'FinanceMaxAI',
   description: 'Explainable Financial Education Platform',
 }
 

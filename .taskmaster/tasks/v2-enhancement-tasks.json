@@ -1,0 +1,783 @@
+{
+  "v2-enhancements": {
+    "tasks": [
+      {
+        "id": 100,
+        "title": "Add V2 Tables to Existing SQLite Database",
+        "description": "Add 5 new tables to your existing spendsense.db SQLite database for goals, budgets, alerts, subscriptions, and health scores",
+        "details": "Create migration scripts (or direct SQL) to add 5 new tables to your existing SQLite database (spendsense.db): financial_goals, budgets, alerts, subscriptions, and health_scores. Ensure all foreign key constraints are properly set to reference existing users table. Add indexes for performance on user_id lookups. Update app/models.py with new SQLAlchemy models.",
+        "testStrategy": "Verify migrations run successfully. Test CRUD operations on all new tables. Ensure foreign key constraints work correctly. Validate indexes improve query performance.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Database Migration Script",
+            "description": "Write Alembic migration to add all 5 new tables",
+            "dependencies": [],
+            "details": "Create migration file with CREATE TABLE statements for all new schema. Include proper data types, constraints, and indexes.",
+            "status": "pending",
+            "testStrategy": "Run migration up and down successfully. Verify schema matches design."
+          },
+          {
+            "id": 2,
+            "title": "Add SQLAlchemy Models",
+            "description": "Create Python models for all new tables in app/models.py",
+            "dependencies": [1],
+            "details": "Define FinancialGoal, Budget, Alert, Subscription, and HealthScore models with proper relationships and validation.",
+            "status": "pending",
+            "testStrategy": "Test model creation, relationships, and serialization."
+          },
+          {
+            "id": 3,
+            "title": "Add Database Indexes",
+            "description": "Create indexes for frequently queried columns",
+            "dependencies": [1],
+            "details": "Add indexes on user_id for all tables, created_at for alerts, status for goals/budgets, and computed_at for health scores.",
+            "status": "pending",
+            "testStrategy": "Run EXPLAIN queries to verify index usage. Benchmark query performance."
+          }
+        ]
+      },
+      {
+        "id": 101,
+        "title": "Implement Financial Goals Feature",
+        "description": "Build complete goal setting and tracking system with backend API and frontend UI",
+        "details": "Create REST API endpoints for CRUD operations on financial goals. Implement progress calculation based on account balances. Build React components for goal creation, visualization, and management. Add goal context to chatbot.",
+        "testStrategy": "Test goal creation with various target amounts and deadlines. Verify progress calculations are accurate. Test projected completion date algorithm with different savings rates. Validate UI responsiveness and error handling.",
+        "priority": "high",
+        "dependencies": [100],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Goals API Endpoints",
+            "description": "Implement FastAPI endpoints for goal management",
+            "dependencies": [],
+            "details": "Create /api/v1/goals endpoints: POST create, GET list, PUT update, DELETE delete, GET progress. Include input validation and error handling.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for each endpoint. Test with valid and invalid inputs. Verify consent checks work."
+          },
+          {
+            "id": 2,
+            "title": "Implement Goal Progress Calculator",
+            "description": "Build service to calculate progress and project completion",
+            "dependencies": [],
+            "details": "Calculate current progress based on account balances. Project completion date using 90-day average savings rate. Handle edge cases like negative savings.",
+            "status": "pending",
+            "testStrategy": "Test with various scenarios: consistent savings, irregular savings, no savings. Verify projections are realistic."
+          },
+          {
+            "id": 3,
+            "title": "Build Goals Dashboard Component",
+            "description": "Create React component to display and manage goals",
+            "dependencies": [1],
+            "details": "Build GoalsDashboard.tsx with goal cards showing progress bars, projected dates, and current status. Include create/edit/delete modals.",
+            "status": "pending",
+            "testStrategy": "Test CRUD operations through UI. Verify visual progress indicators update correctly. Test responsive design."
+          },
+          {
+            "id": 4,
+            "title": "Add Goal Visualizations",
+            "description": "Create progress charts and visual indicators",
+            "dependencies": [3],
+            "details": "Implement circular progress indicators, trend charts showing historical progress, and visual milestones (25%, 50%, 75%, 100%).",
+            "status": "pending",
+            "testStrategy": "Test with goals at different completion percentages. Verify animations work smoothly."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Goals with Chatbot",
+            "description": "Add goal context to chatbot responses",
+            "dependencies": [1, 2],
+            "details": "Update ContextBuilder to include active goals. Modify prompts to reference goals. Add goal-specific quick questions.",
+            "status": "pending",
+            "testStrategy": "Test chatbot responses mention goals appropriately. Verify goal data is accurate in context."
+          }
+        ]
+      },
+      {
+        "id": 102,
+        "title": "Implement Budget System",
+        "description": "Build intelligent budgeting system with auto-generation, tracking, and alerts",
+        "details": "Create budget management API with auto-generation using 50/30/20 rule + spending history. Implement real-time budget tracking against actual spending. Build budget vs actual comparison charts. Add budget alert triggers.",
+        "testStrategy": "Test auto-generation produces reasonable budgets for various spending patterns. Verify budget tracking updates in real-time as transactions occur. Test alert triggers at correct thresholds. Validate budget adjustment simulations.",
+        "priority": "high",
+        "dependencies": [100],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Budget API Endpoints",
+            "description": "Implement REST endpoints for budget management",
+            "dependencies": [],
+            "details": "Create endpoints: POST create, GET list, PUT update, DELETE delete, GET status, POST auto-generate. Include validation for monthly limits.",
+            "status": "pending",
+            "testStrategy": "Test all CRUD operations. Verify budget limits are validated correctly."
+          },
+          {
+            "id": 2,
+            "title": "Implement Auto-Budget Generation",
+            "description": "Build algorithm to generate budgets from spending history",
+            "dependencies": [],
+            "details": "Calculate 3-month average spending by category. Apply 50/30/20 rule for essentials/wants/savings. Add 10% buffer for variability. Generate budgets for all active spending categories.",
+            "status": "pending",
+            "testStrategy": "Test with various spending patterns. Verify budgets are realistic and balanced. Test edge cases like new users."
+          },
+          {
+            "id": 3,
+            "title": "Build Budget Tracking Service",
+            "description": "Create service to track spending against budgets",
+            "dependencies": [1],
+            "details": "Calculate current month spending by category. Compare to budget limits. Compute percentage used. Identify categories approaching/exceeding limits.",
+            "status": "pending",
+            "testStrategy": "Test with transactions added throughout month. Verify percentages update correctly. Test month rollover."
+          },
+          {
+            "id": 4,
+            "title": "Create Budget Dashboard Component",
+            "description": "Build UI for budget management",
+            "dependencies": [1, 3],
+            "details": "Create BudgetDashboard.tsx with category cards showing spent vs limit. Include bar charts, percentage indicators, and color coding (green/yellow/red).",
+            "status": "pending",
+            "testStrategy": "Test with budgets at various usage levels. Verify color coding works correctly. Test responsive design."
+          },
+          {
+            "id": 5,
+            "title": "Add Budget vs Actual Charts",
+            "description": "Create visualization comparing budget to actual spending",
+            "dependencies": [4],
+            "details": "Implement stacked bar chart showing budgeted vs actual by category. Add historical view for past months.",
+            "status": "pending",
+            "testStrategy": "Test with multi-month data. Verify charts update correctly when budgets change."
+          },
+          {
+            "id": 6,
+            "title": "Implement Budget Alert Integration",
+            "description": "Connect budget system to alerts",
+            "dependencies": [3],
+            "details": "Trigger alerts when category reaches 80%, 100%, 110% of budget. Include budget details in alert message.",
+            "status": "pending",
+            "testStrategy": "Test alerts trigger at correct thresholds. Verify no duplicate alerts. Test alert deduplication."
+          }
+        ]
+      },
+      {
+        "id": 103,
+        "title": "Build Smart Alerts System",
+        "description": "Create proactive notification system for financial events and anomalies",
+        "details": "Implement alert detection algorithms for unusual spending, low balances, large transactions, subscription changes, and bill reminders. Create alert delivery system with UI notifications and optional email. Build alert preferences management. Add background job scheduler.",
+        "testStrategy": "Test each alert type triggers correctly with appropriate data. Verify alert deduplication works. Test user preferences are respected. Validate background job runs reliably. Test alert read/unread states.",
+        "priority": "high",
+        "dependencies": [100],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Alerts API Endpoints",
+            "description": "Build REST API for alert management",
+            "dependencies": [],
+            "details": "Create endpoints: GET list, PUT mark-read, POST preferences. Include filtering by severity and type. Add pagination.",
+            "status": "pending",
+            "testStrategy": "Test alert retrieval with various filters. Verify read state updates correctly. Test preferences CRUD."
+          },
+          {
+            "id": 2,
+            "title": "Implement Alert Detection Algorithms",
+            "description": "Build algorithms to detect alert-worthy events",
+            "dependencies": [],
+            "details": "Implement detection for: unusual spending (>2 std dev), low balance (<$500), large transactions (>$200), subscription increases (>10%), bill reminders (3 days before due).",
+            "status": "pending",
+            "testStrategy": "Test each algorithm with edge cases. Verify thresholds work correctly. Test statistical calculations."
+          },
+          {
+            "id": 3,
+            "title": "Create Alert Generation Service",
+            "description": "Build service to create and store alerts",
+            "dependencies": [1, 2],
+            "details": "Check for duplicate alerts (same type + user + 24h window). Create alert records with proper severity. Include contextual data in alert payload.",
+            "status": "pending",
+            "testStrategy": "Test duplicate prevention. Verify alerts include correct contextual data. Test severity assignment."
+          },
+          {
+            "id": 4,
+            "title": "Build Background Alert Job",
+            "description": "Create scheduled job to detect and generate alerts",
+            "dependencies": [3],
+            "details": "Create background job that runs every 6 hours. Process all active users. Generate alerts for detected events. Log execution metrics.",
+            "status": "pending",
+            "testStrategy": "Test job runs on schedule. Verify performance with 100+ users. Test error handling and logging."
+          },
+          {
+            "id": 5,
+            "title": "Create Alerts UI Component",
+            "description": "Build notification bell and alerts panel",
+            "dependencies": [1],
+            "details": "Create AlertsDropdown.tsx with notification bell icon showing unread count. Build dropdown panel listing recent alerts with severity indicators.",
+            "status": "pending",
+            "testStrategy": "Test unread count updates correctly. Verify alerts display properly. Test mark-read functionality."
+          },
+          {
+            "id": 6,
+            "title": "Build Alert Preferences Page",
+            "description": "Create UI for managing alert settings",
+            "dependencies": [1],
+            "details": "Build AlertPreferences.tsx allowing users to enable/disable alert types, set thresholds, and choose delivery methods (UI, email, both).",
+            "status": "pending",
+            "testStrategy": "Test preference changes save correctly. Verify alerts respect user preferences."
+          }
+        ]
+      },
+      {
+        "id": 104,
+        "title": "Create Subscription Management Dashboard",
+        "description": "Build comprehensive subscription tracking and management interface",
+        "details": "Enhance subscription detection to identify all recurring charges. Calculate annual costs and next charge dates. Create dedicated subscription dashboard with list view, calendar view, and cost breakdown. Add cancellation suggestions for potentially unused subscriptions.",
+        "testStrategy": "Test subscription detection accuracy with various recurring patterns. Verify next charge predictions are within ±3 days. Test annual cost calculations. Validate UI shows all subscription details correctly. Test cancellation tracking.",
+        "priority": "medium",
+        "dependencies": [100],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Enhance Subscription Detection",
+            "description": "Improve algorithm to detect more subscription types",
+            "dependencies": [],
+            "details": "Detect monthly, annual, weekly, and bi-weekly subscriptions. Handle amount variations (±5%). Detect frequency changes. Flag price increases >5%.",
+            "status": "pending",
+            "testStrategy": "Test with real-world subscription patterns. Achieve 95%+ detection rate. Test with edge cases."
+          },
+          {
+            "id": 2,
+            "title": "Implement Next Charge Prediction",
+            "description": "Build algorithm to predict next charge date",
+            "dependencies": [1],
+            "details": "Use historical charge dates to predict next occurrence. Handle irregular patterns. Provide confidence score. Update predictions as new charges occur.",
+            "status": "pending",
+            "testStrategy": "Test accuracy is within ±3 days for 90%+ of predictions. Test with monthly, annual, weekly patterns."
+          },
+          {
+            "id": 3,
+            "title": "Create Subscriptions API",
+            "description": "Build REST endpoints for subscription management",
+            "dependencies": [1, 2],
+            "details": "Create endpoints: GET list, PUT update-status, GET summary, POST re-detect. Include filtering and sorting options.",
+            "status": "pending",
+            "testStrategy": "Test all endpoints. Verify cancellation status updates correctly. Test summary calculations."
+          },
+          {
+            "id": 4,
+            "title": "Build Subscription Dashboard Component",
+            "description": "Create UI showing all subscriptions",
+            "dependencies": [3],
+            "details": "Build SubscriptionDashboard.tsx with list view showing merchant, amount, frequency, and annual cost. Add total annual spend prominently. Include status indicators (active/cancelled).",
+            "status": "pending",
+            "testStrategy": "Test with various numbers of subscriptions. Verify sorting and filtering work. Test responsive design."
+          },
+          {
+            "id": 5,
+            "title": "Add Calendar View",
+            "description": "Create calendar showing upcoming charges",
+            "dependencies": [4],
+            "details": "Implement monthly calendar view with subscription charges marked on predicted dates. Color-code by amount. Show tooltips with details.",
+            "status": "pending",
+            "testStrategy": "Test calendar displays all upcoming charges. Verify date predictions are shown correctly."
+          },
+          {
+            "id": 6,
+            "title": "Build Cost Breakdown Visualization",
+            "description": "Create charts showing subscription costs",
+            "dependencies": [4],
+            "details": "Add pie chart breaking down annual costs by subscription. Show percentage of total income spent on subscriptions.",
+            "status": "pending",
+            "testStrategy": "Test with various subscription counts. Verify calculations are accurate."
+          },
+          {
+            "id": 7,
+            "title": "Add Cancellation Suggestions",
+            "description": "Suggest potentially unused subscriptions",
+            "dependencies": [3],
+            "details": "Flag subscriptions with no usage indicators (if available). Suggest based on spending patterns. Provide savings calculator if cancelled.",
+            "status": "pending",
+            "testStrategy": "Test suggestions are reasonable. Verify savings calculations are accurate."
+          }
+        ]
+      },
+      {
+        "id": 105,
+        "title": "Implement Financial Health Score",
+        "description": "Create comprehensive scoring system to measure and track financial health",
+        "details": "Build algorithm to calculate 0-100 health score based on 5 components: credit utilization (30%), savings rate (25%), emergency fund (20%), debt-to-income (15%), payment history (10%). Create historical tracking and improvement suggestions. Build prominent dashboard display with component breakdown.",
+        "testStrategy": "Test score calculations with various financial profiles. Verify component weights total 100%. Test historical tracking stores scores correctly. Validate improvement suggestions are actionable. Test UI displays score prominently with proper grading.",
+        "priority": "medium",
+        "dependencies": [100],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Score Calculation Algorithm",
+            "description": "Build core scoring logic with 5 components",
+            "dependencies": [],
+            "details": "Calculate: credit_utilization (30%), savings_rate (25%), emergency_fund (20%), debt_to_income (15%), payment_history (10%). Normalize each to 0-100 scale. Apply weights and sum to total score. Assign letter grade (A-F).",
+            "status": "pending",
+            "testStrategy": "Test with edge cases (perfect score, worst score, missing data). Verify component weights. Test grade assignment."
+          },
+          {
+            "id": 2,
+            "title": "Create Health Score Service",
+            "description": "Build service to compute and store scores",
+            "dependencies": [1],
+            "details": "Create HealthScoreService that computes score for a user. Store score and component breakdown in database. Handle missing data gracefully. Return detailed breakdown.",
+            "status": "pending",
+            "testStrategy": "Test score computation for various users. Verify scores are stored correctly. Test error handling."
+          },
+          {
+            "id": 3,
+            "title": "Build Daily Score Calculation Job",
+            "description": "Create background job to compute scores daily",
+            "dependencies": [2],
+            "details": "Create scheduled job running daily at 2 AM. Compute scores for all active users with consent. Store historical scores. Log execution metrics.",
+            "status": "pending",
+            "testStrategy": "Test job runs on schedule. Verify performance with 100+ users. Test historical data storage."
+          },
+          {
+            "id": 4,
+            "title": "Create Health Score API",
+            "description": "Build REST endpoints for score access",
+            "dependencies": [2],
+            "details": "Create endpoints: GET current, GET history, GET improvement-suggestions. Include component breakdown in responses.",
+            "status": "pending",
+            "testStrategy": "Test all endpoints. Verify historical data returned correctly. Test suggestion quality."
+          },
+          {
+            "id": 5,
+            "title": "Implement Improvement Suggestions",
+            "description": "Build algorithm to suggest score improvements",
+            "dependencies": [1],
+            "details": "Analyze component scores to identify weaknesses. Generate top 3 actionable suggestions (e.g., 'Pay down credit card to improve utilization'). Calculate projected score impact.",
+            "status": "pending",
+            "testStrategy": "Test suggestions are relevant to score weaknesses. Verify impact calculations are accurate."
+          },
+          {
+            "id": 6,
+            "title": "Build Health Score Display Component",
+            "description": "Create prominent score visualization",
+            "dependencies": [4],
+            "details": "Build HealthScoreCard.tsx with large circular score gauge (0-100). Use color gradient (red→yellow→green). Show letter grade. Display component breakdown chart.",
+            "status": "pending",
+            "testStrategy": "Test with various scores. Verify colors match score ranges. Test responsive design."
+          },
+          {
+            "id": 7,
+            "title": "Add Historical Score Chart",
+            "description": "Create line chart showing score over time",
+            "dependencies": [6],
+            "details": "Implement line chart showing 30-day score history. Highlight improvements/declines. Add milestone markers.",
+            "status": "pending",
+            "testStrategy": "Test with various history lengths. Verify chart updates correctly with new scores."
+          },
+          {
+            "id": 8,
+            "title": "Build Improvement Actions Component",
+            "description": "Display actionable improvement suggestions",
+            "dependencies": [5, 6],
+            "details": "Create ImprovementActions.tsx showing top 3 suggestions with projected score impact. Add CTA buttons for relevant actions (e.g., 'Set Budget').",
+            "status": "pending",
+            "testStrategy": "Test suggestions update based on score changes. Verify CTAs link to correct features."
+          }
+        ]
+      },
+      {
+        "id": 106,
+        "title": "Add Background Job Scheduler",
+        "description": "Implement reliable scheduler for periodic tasks",
+        "details": "Set up APScheduler or similar to run background jobs: compute_health_scores (daily 2AM), detect_alerts (every 6h), update_goal_progress (daily 3AM), check_budget_status (every 12h), detect_subscriptions (weekly). Add job monitoring and error handling.",
+        "testStrategy": "Test all jobs run on schedule. Verify jobs don't overlap. Test error recovery. Monitor job execution times. Test job logging.",
+        "priority": "high",
+        "dependencies": [100],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install and Configure Scheduler",
+            "description": "Set up APScheduler in FastAPI",
+            "dependencies": [],
+            "details": "Install APScheduler. Configure with SQLite job store for persistence. Set up error handlers and logging. Add startup/shutdown hooks.",
+            "status": "pending",
+            "testStrategy": "Test scheduler starts correctly. Verify jobs persist across restarts. Test error logging."
+          },
+          {
+            "id": 2,
+            "title": "Create Job Registry",
+            "description": "Build central registry for all background jobs",
+            "dependencies": [1],
+            "details": "Create jobs.py module defining all scheduled jobs. Include job metadata (name, schedule, description). Add execution tracking.",
+            "status": "pending",
+            "testStrategy": "Test all jobs are registered correctly. Verify schedules are accurate."
+          },
+          {
+            "id": 3,
+            "title": "Implement Job Monitoring",
+            "description": "Add monitoring and alerting for job health",
+            "dependencies": [2],
+            "details": "Log job start/end times. Track success/failure rates. Alert if job fails repeatedly. Store execution metrics.",
+            "status": "pending",
+            "testStrategy": "Test monitoring captures job metrics. Verify failure alerts work. Test metric storage."
+          },
+          {
+            "id": 4,
+            "title": "Add Job Management Endpoint",
+            "description": "Create admin endpoint to manage jobs",
+            "dependencies": [2],
+            "details": "Build /api/v1/admin/jobs endpoint to list jobs, trigger manually, view history. Add authentication.",
+            "status": "pending",
+            "testStrategy": "Test job listing shows all registered jobs. Verify manual triggers work. Test authentication."
+          }
+        ]
+      },
+      {
+        "id": 107,
+        "title": "Enhance Chatbot with New Features",
+        "description": "Integrate goals, budgets, alerts, subscriptions, and health score into chatbot context",
+        "details": "Update ContextBuilder to include all new feature data. Add quick question suggestions for new features. Update prompts to handle new queries. Add feature-specific response patterns.",
+        "testStrategy": "Test chatbot can answer questions about goals, budgets, subscriptions, and health score. Verify context includes accurate data. Test quick questions work correctly. Validate response quality.",
+        "priority": "medium",
+        "dependencies": [101, 102, 103, 104, 105],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update Context Builder",
+            "description": "Add new feature data to chatbot context",
+            "dependencies": [],
+            "details": "Modify ContextBuilder to fetch and format: active goals, budget status, recent alerts, subscriptions, current health score. Add to context string.",
+            "status": "pending",
+            "testStrategy": "Test context includes all new data. Verify token limits respected. Test performance."
+          },
+          {
+            "id": 2,
+            "title": "Add New Quick Questions",
+            "description": "Create quick question suggestions for new features",
+            "dependencies": [],
+            "details": "Add questions like: 'How's my health score?', 'Am I on track for my goals?', 'Where am I over budget?', 'What are my subscriptions?'",
+            "status": "pending",
+            "testStrategy": "Test questions appear contextually. Verify responses are accurate."
+          },
+          {
+            "id": 3,
+            "title": "Update System Prompt",
+            "description": "Enhance prompt to handle new feature queries",
+            "dependencies": [],
+            "details": "Update SYSTEM_PROMPT_V1 to include guidance on discussing goals, budgets, alerts, subscriptions, and health scores. Add example responses.",
+            "status": "pending",
+            "testStrategy": "Test prompt improvements with various questions. Verify response quality."
+          },
+          {
+            "id": 4,
+            "title": "Add Feature-Specific Response Patterns",
+            "description": "Create templates for common feature questions",
+            "dependencies": [3],
+            "details": "Add response patterns for: goal progress, budget status, subscription costs, health score explanation, alert summaries.",
+            "status": "pending",
+            "testStrategy": "Test patterns produce consistent, helpful responses. Verify accuracy."
+          }
+        ]
+      },
+      {
+        "id": 108,
+        "title": "Build V2 Dashboard Integration",
+        "description": "Add new feature components to main user dashboard",
+        "details": "Integrate health score card, goals summary, budget status, and alert notifications into dashboard. Reorganize layout for optimal information hierarchy. Add navigation to dedicated feature pages.",
+        "testStrategy": "Test dashboard loads all new components. Verify performance with all data loading. Test responsive layout. Validate navigation links work.",
+        "priority": "medium",
+        "dependencies": [101, 102, 103, 104, 105],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add Health Score to Dashboard",
+            "description": "Place health score card prominently on dashboard",
+            "dependencies": [],
+            "details": "Add HealthScoreCard to dashboard header area. Show current score, trend arrow, and quick link to details.",
+            "status": "pending",
+            "testStrategy": "Test score displays correctly. Verify updates reflect changes. Test responsive design."
+          },
+          {
+            "id": 2,
+            "title": "Add Goals Summary Card",
+            "description": "Show active goals overview on dashboard",
+            "dependencies": [],
+            "details": "Create GoalsSummary component showing top 3 active goals with mini progress bars. Add 'View All' link.",
+            "status": "pending",
+            "testStrategy": "Test with 0, 1, 3, 5+ goals. Verify progress displays correctly. Test link navigation."
+          },
+          {
+            "id": 3,
+            "title": "Add Budget Status Overview",
+            "description": "Display budget status summary on dashboard",
+            "dependencies": [],
+            "details": "Create BudgetStatus component showing categories near/over budget. Use color indicators. Add quick link to full budget page.",
+            "status": "pending",
+            "testStrategy": "Test with various budget statuses. Verify color coding. Test navigation."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Alert Notifications",
+            "description": "Add alert bell to dashboard header",
+            "dependencies": [],
+            "details": "Add AlertsDropdown to dashboard header next to user menu. Show unread count badge.",
+            "status": "pending",
+            "testStrategy": "Test badge updates with new alerts. Verify dropdown displays correctly."
+          },
+          {
+            "id": 5,
+            "title": "Reorganize Dashboard Layout",
+            "description": "Optimize dashboard information hierarchy",
+            "dependencies": [1, 2, 3, 4],
+            "details": "Arrange components in priority order: health score, alerts, goals, budget, existing widgets. Ensure mobile responsive.",
+            "status": "pending",
+            "testStrategy": "Test layout on various screen sizes. Verify all components accessible. Test performance."
+          }
+        ]
+      },
+      {
+        "id": 109,
+        "title": "Create Feature-Specific Pages",
+        "description": "Build dedicated pages for goals, budgets, subscriptions, and health score",
+        "details": "Create new Next.js pages: /dashboard/goals, /dashboard/budgets, /dashboard/subscriptions, /dashboard/health-score. Add navigation menu. Implement responsive layouts.",
+        "testStrategy": "Test all pages load correctly. Verify navigation works. Test responsive design. Validate data displays correctly on each page.",
+        "priority": "medium",
+        "dependencies": [101, 102, 104, 105],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Goals Page",
+            "description": "Build /dashboard/goals page",
+            "dependencies": [],
+            "details": "Create goals/page.tsx with full goals dashboard. Include CRUD modals, progress charts, and detailed metrics.",
+            "status": "pending",
+            "testStrategy": "Test all goal operations. Verify charts render correctly. Test responsive design."
+          },
+          {
+            "id": 2,
+            "title": "Create Budgets Page",
+            "description": "Build /dashboard/budgets page",
+            "dependencies": [],
+            "details": "Create budgets/page.tsx with complete budget dashboard. Include category details, charts, and budget editor.",
+            "status": "pending",
+            "testStrategy": "Test budget operations. Verify charts update correctly. Test responsive design."
+          },
+          {
+            "id": 3,
+            "title": "Create Subscriptions Page",
+            "description": "Build /dashboard/subscriptions page",
+            "dependencies": [],
+            "details": "Create subscriptions/page.tsx with subscription dashboard. Include list view, calendar view, and cost breakdown.",
+            "status": "pending",
+            "testStrategy": "Test all views render correctly. Verify subscription data accurate. Test responsive design."
+          },
+          {
+            "id": 4,
+            "title": "Create Health Score Page",
+            "description": "Build /dashboard/health-score page",
+            "dependencies": [],
+            "details": "Create health-score/page.tsx with detailed score breakdown. Show historical chart, component analysis, and improvement actions.",
+            "status": "pending",
+            "testStrategy": "Test score displays correctly. Verify charts render. Test improvement suggestions."
+          },
+          {
+            "id": 5,
+            "title": "Add Navigation Menu",
+            "description": "Create navigation to new pages",
+            "dependencies": [1, 2, 3, 4],
+            "details": "Add sidebar or top nav with links to all feature pages. Highlight active page. Make mobile-responsive.",
+            "status": "pending",
+            "testStrategy": "Test navigation from all pages. Verify active state highlighting. Test mobile nav."
+          }
+        ]
+      },
+      {
+        "id": 110,
+        "title": "Write Comprehensive Tests",
+        "description": "Create unit, integration, and E2E tests for all V2 features",
+        "details": "Write pytest tests for backend logic (90%+ coverage target). Create React component tests. Add integration tests for workflows. Create E2E tests for critical paths.",
+        "testStrategy": "Achieve 90%+ test coverage. All tests pass. Tests run in CI/CD. Performance benchmarks met.",
+        "priority": "high",
+        "dependencies": [101, 102, 103, 104, 105, 106, 107, 108, 109],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Write Goals Backend Tests",
+            "description": "Create pytest tests for goals API and logic",
+            "dependencies": [],
+            "details": "Test all endpoints, progress calculation, projection algorithm, and edge cases. Achieve 90%+ coverage.",
+            "status": "pending",
+            "testStrategy": "Run pytest with coverage report. Verify all critical paths tested."
+          },
+          {
+            "id": 2,
+            "title": "Write Budget Backend Tests",
+            "description": "Create pytest tests for budget system",
+            "dependencies": [],
+            "details": "Test auto-generation, tracking, alerts, and all endpoints. Test budget calculations. Achieve 90%+ coverage.",
+            "status": "pending",
+            "testStrategy": "Run pytest with coverage report. Verify calculations are accurate."
+          },
+          {
+            "id": 3,
+            "title": "Write Alerts Backend Tests",
+            "description": "Create pytest tests for alert system",
+            "dependencies": [],
+            "details": "Test all detection algorithms, deduplication, preferences, and endpoints. Test background job. Achieve 90%+ coverage.",
+            "status": "pending",
+            "testStrategy": "Run pytest with coverage report. Verify all alert types tested."
+          },
+          {
+            "id": 4,
+            "title": "Write Subscription Backend Tests",
+            "description": "Create pytest tests for subscription system",
+            "dependencies": [],
+            "details": "Test detection algorithm, next charge prediction, and endpoints. Test edge cases. Achieve 90%+ coverage.",
+            "status": "pending",
+            "testStrategy": "Run pytest with coverage report. Verify detection accuracy."
+          },
+          {
+            "id": 5,
+            "title": "Write Health Score Backend Tests",
+            "description": "Create pytest tests for scoring system",
+            "dependencies": [],
+            "details": "Test score calculation, component weights, grading, and suggestions. Test background job. Achieve 90%+ coverage.",
+            "status": "pending",
+            "testStrategy": "Run pytest with coverage report. Verify score calculations."
+          },
+          {
+            "id": 6,
+            "title": "Write Frontend Component Tests",
+            "description": "Create Vitest tests for React components",
+            "dependencies": [],
+            "details": "Test all new components render correctly, handle user interactions, and display data accurately. Use React Testing Library.",
+            "status": "pending",
+            "testStrategy": "Run vitest with coverage. Test critical user flows."
+          },
+          {
+            "id": 7,
+            "title": "Write Integration Tests",
+            "description": "Create end-to-end workflow tests",
+            "dependencies": [],
+            "details": "Test workflows: create goal → track progress, set budget → receive alert, detect subscription → view dashboard.",
+            "status": "pending",
+            "testStrategy": "Run integration tests. Verify data flows correctly between components."
+          }
+        ]
+      },
+      {
+        "id": 111,
+        "title": "Performance Optimization",
+        "description": "Optimize database queries, API responses, and frontend rendering",
+        "details": "Add database indexes, implement caching, optimize API queries, lazy load components, add pagination. Target <2s page loads, <500ms API responses.",
+        "testStrategy": "Run performance benchmarks. Verify page loads <2s. Test API response times <500ms. Check database query plans. Test with 100+ users.",
+        "priority": "medium",
+        "dependencies": [110],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add Database Query Optimization",
+            "description": "Optimize slow queries with indexes and rewrites",
+            "dependencies": [],
+            "details": "Run EXPLAIN on all queries. Add missing indexes. Optimize N+1 queries. Use eager loading where appropriate.",
+            "status": "pending",
+            "testStrategy": "Benchmark query times. Verify improvements. Test with production-like data volumes."
+          },
+          {
+            "id": 2,
+            "title": "Implement API Response Caching",
+            "description": "Add caching for expensive queries",
+            "dependencies": [],
+            "details": "Cache user profiles (5min TTL), spending summaries (1h TTL), health scores (1h TTL). Use in-memory cache.",
+            "status": "pending",
+            "testStrategy": "Test cache hits/misses. Verify TTLs work. Test cache invalidation."
+          },
+          {
+            "id": 3,
+            "title": "Optimize Frontend Bundle Size",
+            "description": "Reduce JavaScript bundle size",
+            "dependencies": [],
+            "details": "Code split routes. Lazy load components. Tree-shake unused code. Optimize chart libraries.",
+            "status": "pending",
+            "testStrategy": "Measure bundle size. Test lazy loading. Verify functionality intact."
+          },
+          {
+            "id": 4,
+            "title": "Add Pagination to Large Lists",
+            "description": "Implement pagination for transactions, alerts, etc.",
+            "dependencies": [],
+            "details": "Add pagination to transactions list, alerts list, and other large datasets. Use cursor-based pagination.",
+            "status": "pending",
+            "testStrategy": "Test pagination with large datasets. Verify performance improvement."
+          }
+        ]
+      },
+      {
+        "id": 112,
+        "title": "Documentation and Launch Prep",
+        "description": "Update documentation, create user guides, and prepare for launch",
+        "details": "Update README with V2 features. Create API documentation. Write user guides. Update rubric evaluation. Prepare launch announcement.",
+        "testStrategy": "Documentation is complete and accurate. API docs match implementation. User guides are clear. All rubric criteria met.",
+        "priority": "medium",
+        "dependencies": [110, 111],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update README",
+            "description": "Document V2 features in README",
+            "dependencies": [],
+            "details": "Add sections for goals, budgets, alerts, subscriptions, and health score. Update screenshots. Add setup instructions.",
+            "status": "pending",
+            "testStrategy": "Verify README is accurate and complete. Test setup instructions."
+          },
+          {
+            "id": 2,
+            "title": "Generate API Documentation",
+            "description": "Create OpenAPI/Swagger docs for new endpoints",
+            "dependencies": [],
+            "details": "Document all new API endpoints with request/response schemas, examples, and error codes.",
+            "status": "pending",
+            "testStrategy": "Verify docs match implementation. Test examples work."
+          },
+          {
+            "id": 3,
+            "title": "Create User Guides",
+            "description": "Write guides for each new feature",
+            "dependencies": [],
+            "details": "Create guides for: setting goals, managing budgets, understanding alerts, reviewing subscriptions, improving health score.",
+            "status": "pending",
+            "testStrategy": "Test guides with real users. Verify clarity and accuracy."
+          },
+          {
+            "id": 4,
+            "title": "Update Rubric Evaluation",
+            "description": "Run evaluation metrics with V2 features",
+            "dependencies": [],
+            "details": "Run evaluation harness. Verify all rubric criteria still met. Document V2 enhancements in evaluation report.",
+            "status": "pending",
+            "testStrategy": "Verify evaluation passes. Check all metrics meet targets."
+          },
+          {
+            "id": 5,
+            "title": "Prepare Launch Materials",
+            "description": "Create launch announcement and marketing materials",
+            "dependencies": [],
+            "details": "Write launch announcement. Create feature highlight screenshots. Prepare demo video.",
+            "status": "pending",
+            "testStrategy": "Review materials for accuracy. Test demo video."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -6,14 +6,23 @@ import type { UserProfile } from '@/types';
 
 interface DashboardSummaryProps {
   userId: string;
+  profile?: UserProfile | null;
 }
 
-export default function DashboardSummary({ userId }: DashboardSummaryProps) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function DashboardSummary({ userId, profile: profileProp }: DashboardSummaryProps) {
+  const [profile, setProfile] = useState<UserProfile | null>(profileProp || null);
+  const [loading, setLoading] = useState(!profileProp);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // If profile is passed as prop, use it directly (avoid duplicate fetch)
+    if (profileProp) {
+      setProfile(profileProp);
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise fetch it
     const fetchProfile = async () => {
       try {
         setLoading(true);
@@ -28,7 +37,7 @@ export default function DashboardSummary({ userId }: DashboardSummaryProps) {
     };
 
     fetchProfile();
-  }, [userId]);
+  }, [userId, profileProp]);
 
   if (loading) {
     return (
@@ -90,7 +99,7 @@ export default function DashboardSummary({ userId }: DashboardSummaryProps) {
         {/* Credit Balance */}
         <div className="bg-[var(--bg-tertiary)] p-6 rounded-lg border border-[var(--border-color)] transition-smooth hover:border-[var(--accent-primary)]">
           <p className="text-sm text-[var(--text-secondary)] mb-2">Credit Balance</p>
-          <p className="text-2xl font-bold text-amber-700">{formatCurrency(creditBalance)}</p>
+          <p className="text-2xl font-bold text-blue-700">{formatCurrency(creditBalance)}</p>
           <p className="text-xs text-[var(--text-secondary)] mt-2">
             Current Balance
           </p>
@@ -99,7 +108,7 @@ export default function DashboardSummary({ userId }: DashboardSummaryProps) {
         {/* Net Worth */}
         <div className="bg-[var(--bg-tertiary)] p-6 rounded-lg border border-[var(--border-color)] transition-smooth hover:border-[var(--accent-primary)]">
           <p className="text-sm text-[var(--text-secondary)] mb-2">Net Position</p>
-          <p className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-slate-700' : 'text-red-700'}`}>
+          <p className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-blue-700' : 'text-blue-900'}`}>
             {formatCurrency(totalBalance)}
           </p>
           <p className="text-xs text-[var(--text-secondary)] mt-2">
@@ -123,7 +132,7 @@ export default function DashboardSummary({ userId }: DashboardSummaryProps) {
               </p>
             </div>
             <div className="text-right">
-              <p className="font-semibold text-amber-700">
+              <p className="font-semibold text-blue-700">
                 {creditUtilSignal.details.utilization_percent.toFixed(1)}%
               </p>
               <p className="text-xs text-[var(--text-secondary)]">
@@ -142,7 +151,7 @@ export default function DashboardSummary({ userId }: DashboardSummaryProps) {
               </p>
             </div>
             <div className="text-right">
-              <p className="font-semibold text-slate-700">
+              <p className="font-semibold text-blue-700">
                 {formatCurrency(incomeSignal.details.average_income)}
               </p>
               <p className="text-xs text-[var(--text-secondary)]">

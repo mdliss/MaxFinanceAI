@@ -8,7 +8,7 @@ from app.config import settings
 from app.api import api_router
 
 app = FastAPI(
-    title="SpendSense API",
+    title="FinanceMaxAI API",
     description="Financial education platform API",
     version="1.0.0"
 )
@@ -49,11 +49,11 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/")
 async def root():
     return {
-        "message": "SpendSense API",
+        "message": "FinanceMaxAI API",
         "version": "1.0.0",
         "status": "running"
     }
 
-@app.get("/health")
+@app.get("/health/")
 async def health_check():
     return {"status": "healthy"}

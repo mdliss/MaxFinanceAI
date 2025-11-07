@@ -13,6 +13,9 @@ import CreditUtilizationGauge from '@/components/user/CreditUtilizationGauge';
 import SpendingPieChart from '@/components/user/SpendingPieChart';
 import SavingsLineChart from '@/components/user/SavingsLineChart';
 import BehavioralSignals from '@/components/user/BehavioralSignals';
+import AlertsCenter from '@/components/user/AlertsCenter';
+import GoalsSummary from '@/components/user/GoalsSummary';
+import BudgetsSummary from '@/components/user/BudgetsSummary';
 
 export default function UserDashboard() {
   const router = useRouter();
@@ -24,6 +27,7 @@ export default function UserDashboard() {
   const [creditUtilization, setCreditUtilization] = useState<any>(null);
   const [savingsHistory, setSavingsHistory] = useState<any>(null);
   const [spendingCategories, setSpendingCategories] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -47,13 +51,15 @@ export default function UserDashboard() {
     const fetchFinancialData = async () => {
       setDataLoading(true);
       try {
-        // Fetch all data in parallel
-        const [creditData, savingsData, spendingData] = await Promise.all([
+        // Fetch all data in parallel - INCLUDES USER PROFILE to avoid duplicate calls
+        const [profileData, creditData, savingsData, spendingData] = await Promise.all([
+          api.getUserProfile(userId).catch(() => null),
           api.getCreditUtilization(userId).catch(() => null),
           api.getSavingsHistory(userId, 6).catch(() => null),
           api.getSpendingCategories(userId, 30).catch(() => null),
         ]);
 
+        setUserProfile(profileData);
         setCreditUtilization(creditData);
         setSavingsHistory(savingsData);
         setSpendingCategories(spendingData);
@@ -95,18 +101,30 @@ export default function UserDashboard() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-xl font-bold tracking-tight hover:text-[var(--accent-primary)] transition-smooth">
-              SpendSense
+              FinanceMaxAI
             </Link>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-[var(--text-secondary)]">
-                Welcome, <span className="text-[var(--text-primary)] font-medium">{userName}</span>
-              </span>
-              <button
-                onClick={handleLogout}
-                className="btn-secondary transition-smooth text-sm px-4 py-2"
-              >
-                Sign Out
-              </button>
+            <div className="flex items-center gap-6">
+              <Link href="/dashboard" className="text-sm font-semibold text-[var(--accent-primary)]">
+                Dashboard
+              </Link>
+              <Link href="/goals" className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-smooth">
+                Goals
+              </Link>
+              <Link href="/budgets" className="text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-smooth">
+                Budgets
+              </Link>
+              <div className="flex items-center gap-4 ml-4 pl-4 border-l border-[var(--border-color)]">
+                <AlertsCenter userId={userId} />
+                <span className="text-sm text-[var(--text-secondary)]">
+                  {userName}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="btn-secondary transition-smooth text-sm px-4 py-2"
+                >
+                  Sign Out
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -124,7 +142,7 @@ export default function UserDashboard() {
 
         {/* Dashboard Summary */}
         <div className="mb-8 drop-in-2">
-          <DashboardSummary userId={userId} />
+          <DashboardSummary userId={userId} profile={userProfile} />
         </div>
 
         {/* Financial Visualizations */}
@@ -169,13 +187,23 @@ export default function UserDashboard() {
 
         {/* Behavioral Signals */}
         <div className="mb-8 drop-in-4">
-          <BehavioralSignals userId={userId} />
+          <BehavioralSignals userId={userId} profile={userProfile} />
+        </div>
+
+        {/* V2 Features: Goals & Budgets */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="drop-in-5">
+            <GoalsSummary userId={userId} />
+          </div>
+          <div className="drop-in-5">
+            <BudgetsSummary userId={userId} />
+          </div>
         </div>
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column: Transactions */}
-          <div className="drop-in-5">
+          <div className="drop-in-6">
             <TransactionsList userId={userId} />
           </div>
 

@@ -30,7 +30,7 @@ export default function OperatorDashboard() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-xl font-bold tracking-tight hover:text-[var(--accent-primary)] transition-smooth">
-              SpendSense
+              FinanceMaxAI
             </Link>
             <button className="btn-secondary transition-smooth text-sm px-4 py-2">
               Sign Out

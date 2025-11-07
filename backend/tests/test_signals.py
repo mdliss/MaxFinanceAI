@@ -92,7 +92,7 @@ async def test_credit_utilization_detection(async_db):
         assert signal.signal_type == "credit_utilization"
         assert 0 <= signal.value <= 100
         assert "status" in signal.details
-        assert signal.details["status"] in ["healthy", "high"]
+        assert signal.details["status"] in ["healthy", "high", "critical"]
 
 
 @pytest.mark.asyncio

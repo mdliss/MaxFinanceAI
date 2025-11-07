@@ -19,7 +19,7 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
-console.log('🔧 API Configuration:', {
+console.log('API Configuration:', {
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   API_BASE_URL,
   allEnv: Object.keys(process.env).filter(k => k.startsWith('NEXT_PUBLIC'))
@@ -27,7 +27,7 @@ console.log('🔧 API Configuration:', {
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const fullUrl = `${API_BASE_URL}${endpoint}`;
-  console.log(`🌐 API Request: ${options?.method || 'GET'} ${fullUrl}`);
+  console.log(`API Request: ${options?.method || 'GET'} ${fullUrl}`);
 
   const response = await fetch(fullUrl, {
     headers: {
@@ -37,16 +37,16 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
     ...options,
   });
 
-  console.log(`📡 API Response: ${response.status} ${response.statusText} for ${fullUrl}`);
+  console.log(`API Response: ${response.status} ${response.statusText} for ${fullUrl}`);
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-    console.error(`❌ API Error:`, error);
+    console.error(`API Error:`, error);
     throw new Error(error.detail || `API Error: ${response.status}`);
   }
 
   const data = await response.json();
-  console.log(`✅ API Success:`, data);
+  console.log(`API Success:`, data);
   return data;
 }
 
@@ -219,6 +219,121 @@ export const api = {
     }>(`/transactions/${userId}/savings-history${params}`);
   },
 
+  // Financial Goals (V2)
+  goals: {
+    getGoals: (userId: string) =>
+      fetchAPI<any[]>(`/goals/${userId}`),
+
+    getGoal: (goalId: number) =>
+      fetchAPI<any>(`/goals/goal/${goalId}`),
+
+    createGoal: (userId: string, goal: {
+      name: string;
+      target_amount: number;
+      current_amount: number;
+      deadline: string;
+      category: string;
+    }) =>
+      fetchAPI<any>('/goals/', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId, ...goal }),
+      }),
+
+    updateGoal: (goalId: number, updates: any) =>
+      fetchAPI<any>(`/goals/${goalId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+      }),
+
+    deleteGoal: (goalId: number) =>
+      fetchAPI<{ message: string }>(`/goals/${goalId}`, {
+        method: 'DELETE',
+      }),
+
+    updateProgress: (goalId: number, currentAmount: number) =>
+      fetchAPI<any>(`/goals/${goalId}/progress`, {
+        method: 'POST',
+        body: JSON.stringify({ current_amount: currentAmount }),
+      }),
+  },
+
+  // Budgets (V2)
+  budgets: {
+    getBudgets: (userId: string) =>
+      fetchAPI<any[]>(`/budgets/${userId}`),
+
+    getBudget: (budgetId: number) =>
+      fetchAPI<any>(`/budgets/budget/${budgetId}`),
+
+    createBudget: (userId: string, budget: {
+      category: string;
+      limit: number;
+      period: string;
+      start_date: string;
+    }) =>
+      fetchAPI<any>('/budgets/', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId, ...budget }),
+      }),
+
+    updateBudget: (budgetId: number, updates: any) =>
+      fetchAPI<any>(`/budgets/${budgetId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+      }),
+
+    deleteBudget: (budgetId: number) =>
+      fetchAPI<{ message: string }>(`/budgets/${budgetId}`, {
+        method: 'DELETE',
+      }),
+
+    getSpending: (budgetId: number) =>
+      fetchAPI<{ budget: any; spending: number; remaining: number; percentage: number }>(
+        `/budgets/${budgetId}/spending`
+      ),
+  },
+
+  // Alerts (V2)
+  alerts: {
+    getAlerts: (userId: string, status?: string) => {
+      const params = status ? `?status=${status}` : '';
+      return fetchAPI<any[]>(`/alerts/${userId}${params}`);
+    },
+
+    getAlert: (alertId: number) =>
+      fetchAPI<any>(`/alerts/alert/${alertId}`),
+
+    createAlert: (userId: string, alert: {
+      alert_type: string;
+      severity: string;
+      title: string;
+      message: string;
+      metadata?: any;
+    }) =>
+      fetchAPI<any>('/alerts/', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId, ...alert }),
+      }),
+
+    markAsRead: (alertId: number) =>
+      fetchAPI<any>(`/alerts/${alertId}/read`, {
+        method: 'POST',
+      }),
+
+    dismissAlert: (alertId: number) =>
+      fetchAPI<any>(`/alerts/${alertId}/dismiss`, {
+        method: 'POST',
+      }),
+
+    deleteAlert: (alertId: number) =>
+      fetchAPI<{ message: string }>(`/alerts/${alertId}`, {
+        method: 'DELETE',
+      }),
+
+    getUnreadCount: (userId: string) =>
+      fetchAPI<{ unread_count: number }>(`/alerts/${userId}/unread-count`),
+  },
+
   // Chat/Chatbot
   chat: {
     /**
@@ -233,6 +348,91 @@ export const api = {
           conversation_id: conversationId,
         } as ChatRequest),
       }),
+
+    /**
+     * Stream a message response from the chatbot (SSE)
+     * Returns an async generator that yields text chunks
+     */
+    streamMessage: async function* (userId: string, message: string, conversationId?: string) {
+      const fullUrl = `${API_BASE_URL}/chat/message/stream`;
+      console.log(`Streaming Request: POST ${fullUrl}`);
+
+      const response = await fetch(fullUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          message,
+          conversation_id: conversationId,
+        } as ChatRequest),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Stream error' }));
+        throw new Error(error.detail || `Stream Error: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('No response body reader available');
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Decode the chunk and add to buffer
+          buffer += decoder.decode(value, { stream: true });
+
+          // Process complete SSE messages (separated by \n\n)
+          const messages = buffer.split('\n\n');
+          buffer = messages.pop() || ''; // Keep the last incomplete message in buffer
+
+          for (const message of messages) {
+            if (!message.trim()) continue;
+
+            // Parse SSE format: "data: {...}"
+            const dataMatch = message.match(/^data: (.+)$/m);
+            if (dataMatch) {
+              try {
+                const data = JSON.parse(dataMatch[1]);
+
+                // Yield based on event type
+                if (data.type === 'chunk') {
+                  yield {
+                    type: 'chunk' as const,
+                    content: data.content,
+                  };
+                } else if (data.type === 'done') {
+                  yield {
+                    type: 'done' as const,
+                    messageId: data.message_id,
+                    conversationId: data.conversation_id,
+                  };
+                } else if (data.type === 'start') {
+                  yield {
+                    type: 'start' as const,
+                    conversationId: data.conversation_id,
+                  };
+                } else if (data.type === 'error') {
+                  throw new Error(data.error);
+                }
+              } catch (parseError) {
+                console.error('Failed to parse SSE message:', dataMatch[1]);
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    },
 
     /**
      * Get conversation history for a user

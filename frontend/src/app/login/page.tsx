@@ -50,7 +50,7 @@ export default function LoginPage() {
         {/* Logo/Brand */}
         <div className="text-center mb-8 drop-in-1">
           <Link href="/" className="text-3xl font-bold tracking-tight hover:text-[var(--accent-primary)] transition-smooth">
-            SpendSense
+            FinanceMaxAI
           </Link>
           <p className="text-sm text-[var(--text-secondary)] mt-2">
             Sign in to view your financial dashboard
@@ -77,14 +77,14 @@ export default function LoginPage() {
                 disabled={loading}
               />
               <p className="text-xs text-[var(--text-secondary)] mt-2">
-                Demo user IDs: test_user_1, test_user_2, user_05559915742f
+                Try: <span className="font-mono text-[var(--accent-primary)]">user_bdb7b6912c0b</span>
               </p>
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                <p className="text-sm text-red-400">{error}</p>
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                <p className="text-sm text-blue-800">{error}</p>
               </div>
             )}
 

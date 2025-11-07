@@ -1,4 +1,4 @@
-# MaxFinanceAI - Explainable Financial Education Platform
+# FinanceMaxAI - Explainable Financial Education Platform
 
 AI-powered financial recommendation system with operator oversight, strict guardrails, and full audit trails.
 
@@ -164,7 +164,7 @@ This creates:
 ## Project Structure
 
 ```
-MaxFinanceAI/
+FinanceMaxAI/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py              # FastAPI app entry point

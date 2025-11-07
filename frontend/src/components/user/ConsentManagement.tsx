@@ -83,7 +83,7 @@ export default function ConsentManagement({ userId }: ConsentManagementProps) {
 
           <p className="text-sm text-[var(--text-secondary)] mb-4">
             {consent?.consent_status
-              ? 'You have granted permission for SpendSense to analyze your financial data and provide personalized recommendations.'
+              ? 'You have granted permission for FinanceMaxAI to analyze your financial data and provide personalized recommendations.'
               : 'Grant consent to receive personalized financial insights and recommendations based on your spending patterns.'}
           </p>
 

@@ -5,7 +5,7 @@ from app.services.recommendation_engine import RecommendationEngine
 
 
 @pytest.mark.asyncio
-async def test_generate_recommendations_subscription_optimizer(async_db):
+async def test_generate_recommendations_subscription_optimizer(async_db, add_sufficient_transactions):
     """Test generating recommendations for subscription optimizer persona"""
     # Get a user with consent
     result = await async_db.execute(
@@ -17,6 +17,9 @@ async def test_generate_recommendations_subscription_optimizer(async_db):
     await async_db.execute(Signal.__table__.delete().where(Signal.user_id == user.user_id))
     await async_db.execute(Persona.__table__.delete().where(Persona.user_id == user.user_id))
     await async_db.execute(Recommendation.__table__.delete().where(Recommendation.user_id == user.user_id))
+
+    # Add sufficient transactions (12 to exceed minimum of 10)
+    await add_sufficient_transactions(async_db, user.user_id, count=12)
 
     # Add subscription signals
     for i in range(3):
@@ -58,7 +61,7 @@ async def test_generate_recommendations_subscription_optimizer(async_db):
 
 
 @pytest.mark.asyncio
-async def test_generate_recommendations_savings_builder(async_db):
+async def test_generate_recommendations_savings_builder(async_db, add_sufficient_transactions):
     """Test generating recommendations for savings builder persona"""
     result = await async_db.execute(
         select(User).where(User.consent_status == True).limit(1)
@@ -68,6 +71,9 @@ async def test_generate_recommendations_savings_builder(async_db):
     # Clear existing data
     await async_db.execute(Signal.__table__.delete().where(Signal.user_id == user.user_id))
     await async_db.execute(Persona.__table__.delete().where(Persona.user_id == user.user_id))
+
+    # Add sufficient transactions
+    await add_sufficient_transactions(async_db, user.user_id, count=12)
 
     # Add savings growth signal
     signal = Signal(
@@ -103,7 +109,7 @@ async def test_generate_recommendations_savings_builder(async_db):
 
 
 @pytest.mark.asyncio
-async def test_generate_recommendations_credit_optimizer(async_db):
+async def test_generate_recommendations_credit_optimizer(async_db, add_sufficient_transactions):
     """Test generating recommendations for credit optimizer persona"""
     result = await async_db.execute(
         select(User).where(User.consent_status == True).limit(1)
@@ -113,6 +119,9 @@ async def test_generate_recommendations_credit_optimizer(async_db):
     # Clear existing data
     await async_db.execute(Signal.__table__.delete().where(Signal.user_id == user.user_id))
     await async_db.execute(Persona.__table__.delete().where(Persona.user_id == user.user_id))
+
+    # Add sufficient transactions
+    await add_sufficient_transactions(async_db, user.user_id, count=12)
 
     # Add credit utilization signal
     signal = Signal(
@@ -148,7 +157,7 @@ async def test_generate_recommendations_credit_optimizer(async_db):
 
 
 @pytest.mark.asyncio
-async def test_generate_recommendations_financial_newcomer(async_db):
+async def test_generate_recommendations_financial_newcomer(async_db, add_sufficient_transactions):
     """Test generating recommendations for financial newcomer persona"""
     result = await async_db.execute(
         select(User).where(User.consent_status == True).limit(1)
@@ -158,6 +167,9 @@ async def test_generate_recommendations_financial_newcomer(async_db):
     # Clear existing data
     await async_db.execute(Signal.__table__.delete().where(Signal.user_id == user.user_id))
     await async_db.execute(Persona.__table__.delete().where(Persona.user_id == user.user_id))
+
+    # Add sufficient transactions
+    await add_sufficient_transactions(async_db, user.user_id, count=12)
 
     # Add a minimal signal (guardrails require at least 1 signal)
     signal = Signal(
@@ -193,7 +205,7 @@ async def test_generate_recommendations_financial_newcomer(async_db):
 
 
 @pytest.mark.asyncio
-async def test_recommendation_rationale_contains_data(async_db):
+async def test_recommendation_rationale_contains_data(async_db, add_sufficient_transactions):
     """Test that rationales cite specific user data"""
     result = await async_db.execute(
         select(User).where(User.consent_status == True).limit(1)
@@ -204,13 +216,16 @@ async def test_recommendation_rationale_contains_data(async_db):
     await async_db.execute(Signal.__table__.delete().where(Signal.user_id == user.user_id))
     await async_db.execute(Persona.__table__.delete().where(Persona.user_id == user.user_id))
 
-    # Add subscription signals
+    # Add sufficient transactions
+    await add_sufficient_transactions(async_db, user.user_id, count=12)
+
+    # Add subscription signals (total $60 to exceed $50 minimum)
     for i in range(3):
         signal = Signal(
             signal_id=f"test_sub_{i}_{user.user_id}",
             user_id=user.user_id,
             signal_type="subscription_detected",
-            value=15.0,
+            value=20.0,  # 3 * 20 = 60, exceeds $50 minimum
             details={"merchant": f"Service_{i}"}
         )
         async_db.add(signal)
@@ -235,7 +250,7 @@ async def test_recommendation_rationale_contains_data(async_db):
 
 
 @pytest.mark.asyncio
-async def test_save_recommendations(async_db):
+async def test_save_recommendations(async_db, add_sufficient_transactions):
     """Test saving recommendations to database"""
     result = await async_db.execute(
         select(User).where(User.consent_status == True).limit(1)
@@ -247,6 +262,9 @@ async def test_save_recommendations(async_db):
     await async_db.execute(Persona.__table__.delete().where(Persona.user_id == user.user_id))
     await async_db.execute(Recommendation.__table__.delete().where(Recommendation.user_id == user.user_id))
     await async_db.execute(Recommendation.__table__.delete().where(Recommendation.user_id == user.user_id))
+
+    # Add sufficient transactions
+    await add_sufficient_transactions(async_db, user.user_id, count=12)
 
     # Add a minimal signal (guardrails require at least 1 signal)
     signal = Signal(
@@ -285,7 +303,7 @@ async def test_save_recommendations(async_db):
 
 
 @pytest.mark.asyncio
-async def test_recommendation_content_types(async_db):
+async def test_recommendation_content_types(async_db, add_sufficient_transactions):
     """Test that recommendations include various content types"""
     result = await async_db.execute(
         select(User).where(User.consent_status == True).limit(1)
@@ -296,6 +314,9 @@ async def test_recommendation_content_types(async_db):
     await async_db.execute(Signal.__table__.delete().where(Signal.user_id == user.user_id))
     await async_db.execute(Persona.__table__.delete().where(Persona.user_id == user.user_id))
     await async_db.execute(Recommendation.__table__.delete().where(Recommendation.user_id == user.user_id))
+
+    # Add sufficient transactions
+    await add_sufficient_transactions(async_db, user.user_id, count=12)
 
     # Add a minimal signal (guardrails require at least 1 signal)
     signal = Signal(
@@ -327,7 +348,7 @@ async def test_recommendation_content_types(async_db):
 
 
 @pytest.mark.asyncio
-async def test_recommendations_auto_approved(async_db):
+async def test_recommendations_auto_approved(async_db, add_sufficient_transactions):
     """Test that educational recommendations are auto-approved"""
     result = await async_db.execute(
         select(User).where(User.consent_status == True).limit(1)
@@ -338,6 +359,9 @@ async def test_recommendations_auto_approved(async_db):
     await async_db.execute(Signal.__table__.delete().where(Signal.user_id == user.user_id))
     await async_db.execute(Persona.__table__.delete().where(Persona.user_id == user.user_id))
     await async_db.execute(Recommendation.__table__.delete().where(Recommendation.user_id == user.user_id))
+
+    # Add sufficient transactions
+    await add_sufficient_transactions(async_db, user.user_id, count=12)
 
     # Add a minimal signal (guardrails require at least 1 signal)
     signal = Signal(
@@ -369,12 +393,15 @@ async def test_recommendations_auto_approved(async_db):
 
 
 @pytest.mark.asyncio
-async def test_recommendation_eligibility_check(async_db):
+async def test_recommendation_eligibility_check(async_db, add_sufficient_transactions):
     """Test that eligibility checks work correctly"""
     result = await async_db.execute(
         select(User).where(User.consent_status == True).limit(1)
     )
     user = result.scalar_one()
+
+    # Add sufficient transactions
+    await add_sufficient_transactions(async_db, user.user_id, count=12)
 
     # Clear and setup with minimal signals
     await async_db.execute(Signal.__table__.delete().where(Signal.user_id == user.user_id))

@@ -38,13 +38,13 @@ async def test_assign_subscription_optimizer_persona(async_db):
     # Clear existing signals
     await async_db.execute(Signal.__table__.delete().where(Signal.user_id == user.user_id))
 
-    # Add 3 subscription signals
+    # Add 3 subscription signals (total spend $60 to exceed min of $50)
     for i in range(3):
         signal = Signal(
             signal_id=f"test_sub_{i}_{user.user_id}",
             user_id=user.user_id,
             signal_type="subscription_detected",
-            value=15.0,
+            value=20.0,  # 3 * 20 = 60, which exceeds minimum of 50
             details={"merchant": f"Service_{i}", "frequency": "monthly"}
         )
         async_db.add(signal)
@@ -195,8 +195,8 @@ async def test_multiple_personas_prioritization(async_db):
             signal_id=f"test_credit_{user.user_id}",
             user_id=user.user_id,
             signal_type="credit_utilization",
-            value=45.0,
-            details={"utilization_percent": 45.0, "status": "high"}
+            value=65.0,  # Must be ≥50% for credit_optimizer
+            details={"utilization_percent": 65.0, "status": "high"}
         ),
     ]
 
@@ -214,8 +214,8 @@ async def test_multiple_personas_prioritization(async_db):
     assert "subscription_optimizer" in persona_types
     assert "credit_optimizer" in persona_types
 
-    # subscription_optimizer should be first (priority 1)
-    assert personas[0].persona_type == "subscription_optimizer"
+    # credit_optimizer should be first (priority 1), subscription_optimizer second (priority 3)
+    assert personas[0].persona_type == "credit_optimizer"
     assert personas[0].priority_rank < personas[1].priority_rank
 
 

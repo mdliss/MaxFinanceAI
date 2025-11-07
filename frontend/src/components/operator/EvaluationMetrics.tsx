@@ -245,7 +245,7 @@ export default function EvaluationMetrics() {
                 dataKey="value"
               >
                 {coverageData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index]} className="transition-smooth" />
+                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index]} />
                 ))}
               </Pie>
               <Tooltip />
@@ -269,7 +269,7 @@ export default function EvaluationMetrics() {
                 dataKey="value"
               >
                 {explainabilityData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index]} className="transition-smooth" />
+                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index]} />
                 ))}
               </Pie>
               <Tooltip />
@@ -322,25 +322,25 @@ export default function EvaluationMetrics() {
           <div className="flex items-center justify-between">
             <span>Coverage (users with persona + ≥3 behaviors)</span>
             <span className={`font-semibold ${metrics.coverage.coverage_percentage >= 100 ? 'text-slate-700' : 'text-red-700'}`}>
-              {metrics.coverage.coverage_percentage >= 100 ? '✓ PASS' : '✗ FAIL'} ({metrics.coverage.coverage_percentage.toFixed(1)}% / 100%)
+              {metrics.coverage.coverage_percentage >= 100 ? 'PASS' : 'FAIL'} ({metrics.coverage.coverage_percentage.toFixed(1)}% / 100%)
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span>Explainability (recommendations with rationales)</span>
             <span className={`font-semibold ${metrics.explainability.explainability_percentage >= 100 ? 'text-slate-700' : 'text-red-700'}`}>
-              {metrics.explainability.explainability_percentage >= 100 ? '✓ PASS' : '✗ FAIL'} ({metrics.explainability.explainability_percentage.toFixed(1)}% / 100%)
+              {metrics.explainability.explainability_percentage >= 100 ? 'PASS' : 'FAIL'} ({metrics.explainability.explainability_percentage.toFixed(1)}% / 100%)
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span>Latency (avg time to generate recommendations)</span>
             <span className={`font-semibold ${metrics.latency.avg_recommendation_generation_ms < 5000 ? 'text-slate-700' : 'text-red-700'}`}>
-              {metrics.latency.avg_recommendation_generation_ms < 5000 ? '✓ PASS' : '✗ FAIL'} ({(metrics.latency.avg_recommendation_generation_ms / 1000).toFixed(2)}s / &lt;5s)
+              {metrics.latency.avg_recommendation_generation_ms < 5000 ? 'PASS' : 'FAIL'} ({(metrics.latency.avg_recommendation_generation_ms / 1000).toFixed(2)}s / &lt;5s)
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span>Auditability (recommendations with decision traces)</span>
             <span className={`font-semibold ${metrics.auditability.auditability_percentage >= 100 ? 'text-slate-700' : 'text-red-700'}`}>
-              {metrics.auditability.auditability_percentage >= 100 ? '✓ PASS' : '✗ FAIL'} ({metrics.auditability.auditability_percentage.toFixed(1)}% / 100%)
+              {metrics.auditability.auditability_percentage >= 100 ? 'PASS' : 'FAIL'} ({metrics.auditability.auditability_percentage.toFixed(1)}% / 100%)
             </span>
           </div>
         </div>

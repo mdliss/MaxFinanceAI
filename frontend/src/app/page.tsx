@@ -16,7 +16,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
       <div className="text-center max-w-4xl w-full">
-        <h1 className="text-5xl font-bold mb-4 tracking-tight">SpendSense</h1>
+        <h1 className="text-5xl font-bold mb-4 tracking-tight">FinanceMaxAI</h1>
         <p className="text-xl mb-12 text-[var(--text-secondary)]">Explainable Financial Education Platform</p>
 
         <div className="card-dark p-6 mb-12 transition-smooth">

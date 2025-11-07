@@ -160,6 +160,14 @@ RECOMMENDATION_TEMPLATES = {
     ]
 }
 
+# Persona name aliases - maps new persona names to existing templates
+PERSONA_TEMPLATE_ALIASES = {
+    "subscription_optimizer": "subscription_heavy",
+    "credit_optimizer": "high_utilization",
+    "income_stable": "variable_income_budgeter",
+    "financial_newcomer": "financial_wellness_achiever"  # Use general financial wellness content
+}
+
 
 class RecommendationEngine:
     """Generates personalized educational recommendations based on user personas"""
@@ -206,8 +214,9 @@ class RecommendationEngine:
         )
         signals = result.scalars().all()
 
-        # Get templates for this persona
-        templates = RECOMMENDATION_TEMPLATES.get(persona.persona_type, [])
+        # Get templates for this persona (check aliases first)
+        persona_key = PERSONA_TEMPLATE_ALIASES.get(persona.persona_type, persona.persona_type)
+        templates = RECOMMENDATION_TEMPLATES.get(persona_key, [])
 
         # Generate recommendations as dictionaries first (for guardrail validation)
         recommendations_dict = []
@@ -299,21 +308,23 @@ class RecommendationEngine:
     def _generate_rationale(self, template: str, signals: List[Signal], persona_type: str) -> str:
         """Generate a personalized rationale based on user signals"""
         # Extract relevant data from signals
+        # Use the mapped persona type for data extraction (handle aliases)
+        mapped_type = PERSONA_TEMPLATE_ALIASES.get(persona_type, persona_type)
         data = {}
 
-        if persona_type == "subscription_heavy":
+        if mapped_type == "subscription_heavy":
             sub_signals = [s for s in signals if s.signal_type == "subscription_detected"]
             data["sub_count"] = len(sub_signals)
             data["total_amount"] = sum(s.value for s in sub_signals)
             if sub_signals:
                 data["max_sub"] = max(s.value for s in sub_signals)
 
-        elif persona_type == "savings_builder":
+        elif mapped_type == "savings_builder":
             savings_signals = [s for s in signals if s.signal_type == "savings_growth"]
             if savings_signals:
                 data["growth_rate"] = savings_signals[0].value
 
-        elif persona_type == "high_utilization":
+        elif mapped_type == "high_utilization":
             credit_signals = [s for s in signals if s.signal_type == "credit_utilization"]
             if credit_signals:
                 signal = credit_signals[0]
@@ -321,7 +332,7 @@ class RecommendationEngine:
                 if signal.details:
                     data["balance"] = signal.details.get("current_balance", 0)
 
-        elif persona_type == "variable_income_budgeter":
+        elif mapped_type == "variable_income_budgeter":
             income_signals = [s for s in signals if s.signal_type == "income_stability"]
             if income_signals and income_signals[0].details:
                 data["avg_income"] = income_signals[0].details.get("average_income", 0)

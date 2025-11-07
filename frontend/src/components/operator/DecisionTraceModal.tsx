@@ -31,28 +31,6 @@ export default function DecisionTraceModal({ recommendationId, onClose }: Decisi
     }
   };
 
-  const getSignalIcon = (signalType: string) => {
-    const icons: Record<string, string> = {
-      credit_utilization: '💳',
-      subscription_detection: '📱',
-      savings_growth: '💰',
-      income_stability: '💵',
-      spending_surge: '📈',
-      emergency_fund: '🏦',
-    };
-    return icons[signalType] || '📊';
-  };
-
-  const getPersonaIcon = (personaType: string) => {
-    const icons: Record<string, string> = {
-      savings_builder: '💰',
-      credit_optimizer: '💳',
-      subscription_heavy: '📱',
-      variable_income: '📊',
-      financial_newcomer: '🎯',
-    };
-    return icons[personaType] || '👤';
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 backdrop-blur-sm modal-backdrop">
@@ -113,23 +91,20 @@ export default function DecisionTraceModal({ recommendationId, onClose }: Decisi
                       key={idx}
                       className="bg-[var(--bg-secondary)] p-4 rounded-lg border border-[var(--border-color)] transition-smooth"
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="text-2xl">{getSignalIcon(signal.signal_type)}</div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold capitalize">
-                            {signal.signal_type.replace(/_/g, ' ')}
-                          </h4>
-                          <p className="text-sm text-[var(--text-secondary)] mt-1">
-                            Value: {signal.value.toFixed(2)}
-                          </p>
-                          {signal.details && (
-                            <div className="mt-2 text-xs">
-                              <pre className="bg-[var(--bg-tertiary)] p-2 rounded overflow-x-auto">
-                                {JSON.stringify(signal.details, null, 2)}
-                              </pre>
-                            </div>
-                          )}
-                        </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold capitalize">
+                          {signal.signal_type.replace(/_/g, ' ')}
+                        </h4>
+                        <p className="text-sm text-[var(--text-secondary)] mt-1">
+                          Value: {signal.value.toFixed(2)}
+                        </p>
+                        {signal.details && (
+                          <div className="mt-2 text-xs">
+                            <pre className="bg-[var(--bg-tertiary)] p-2 rounded overflow-x-auto">
+                              {JSON.stringify(signal.details, null, 2)}
+                            </pre>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -156,19 +131,16 @@ export default function DecisionTraceModal({ recommendationId, onClose }: Decisi
                 </div>
 
                 <div className="ml-13 bg-[var(--bg-secondary)] p-6 rounded-lg border border-[var(--accent-primary)] transition-smooth">
-                  <div className="flex items-center gap-4">
-                    <div className="text-5xl">{getPersonaIcon(trace.persona_assigned.persona_type)}</div>
-                    <div className="flex-1">
-                      <h4 className="text-xl font-bold capitalize mb-1">
-                        {trace.persona_assigned.persona_type.replace(/_/g, ' ')}
-                      </h4>
-                      <p className="text-sm text-[var(--text-secondary)] mb-2">
-                        Priority Rank: {trace.persona_assigned.priority_rank}
-                      </p>
-                      <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-sm">
-                        <p className="font-medium text-blue-700 mb-1">Criteria Met:</p>
-                        <p className="text-blue-700">{trace.persona_assigned.criteria_met}</p>
-                      </div>
+                  <div className="flex-1">
+                    <h4 className="text-xl font-bold capitalize mb-1">
+                      {trace.persona_assigned.persona_type.replace(/_/g, ' ')}
+                    </h4>
+                    <p className="text-sm text-[var(--text-secondary)] mb-2">
+                      Priority Rank: {trace.persona_assigned.priority_rank}
+                    </p>
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-sm">
+                      <p className="font-medium text-blue-700 mb-1">Criteria Met:</p>
+                      <p className="text-blue-700">{trace.persona_assigned.criteria_met}</p>
                     </div>
                   </div>
                 </div>
@@ -218,7 +190,6 @@ export default function DecisionTraceModal({ recommendationId, onClose }: Decisi
                     <div className="space-y-1">
                       {trace.recommendation_logic.eligibility_checks.map((check, idx) => (
                         <div key={idx} className="flex items-center gap-2 text-sm">
-                          <span className="text-slate-700">✓</span>
                           <span>{check}</span>
                         </div>
                       ))}
@@ -236,7 +207,7 @@ export default function DecisionTraceModal({ recommendationId, onClose }: Decisi
                           ? 'bg-slate-500/10 text-slate-700'
                           : 'bg-red-500/10 text-red-700'
                       }`}>
-                        {trace.recommendation_logic.tone_validated ? '✓ PASSED' : '✗ FAILED'}
+                        {trace.recommendation_logic.tone_validated ? 'PASSED' : 'FAILED'}
                       </span>
                     </div>
                   </div>

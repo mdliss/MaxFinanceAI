@@ -7,8 +7,8 @@ from app.models import Signal, Persona, User
 
 # Persona type definitions per rubric specification
 PERSONA_DEFINITIONS = {
-    # Persona 1: High Utilization (highest priority)
-    "high_utilization": {
+    # Persona 1: Credit Optimizer (formerly high_utilization - highest priority)
+    "credit_optimizer": {
         "priority": 1,
         "description": "Any card utilization ≥50% OR interest charges > 0 OR minimum-payment-only OR is_overdue = true",
         "criteria": {
@@ -17,7 +17,18 @@ PERSONA_DEFINITIONS = {
         },
         "focus": "Reduce utilization and interest; payment planning and autopay education"
     },
-    # Persona 2: Variable Income Budgeter
+    # Alias for backwards compatibility
+    "high_utilization": {
+        "priority": 1,
+        "description": "Any card utilization ≥50% OR interest charges > 0 OR minimum-payment-only OR is_overdue = true",
+        "criteria": {
+            "signal_types": ["credit_utilization"],
+            "min_utilization": 50,  # ≥50% per rubric
+            "is_alias": True  # Skip during assignment
+        },
+        "focus": "Reduce utilization and interest; payment planning and autopay education"
+    },
+    # Persona 2: Variable Income Budgeter / Income Stable
     "variable_income_budgeter": {
         "priority": 2,
         "description": "Median pay gap > 45 days AND cash-flow buffer < 1 month",
@@ -28,14 +39,36 @@ PERSONA_DEFINITIONS = {
         },
         "focus": "Percent-based budgets, emergency fund basics, smoothing strategies"
     },
-    # Persona 3: Subscription-Heavy
-    "subscription_heavy": {
+    # Income Stable - opposite of variable income
+    "income_stable": {
+        "priority": 2,
+        "description": "Stable income patterns with consistent pay schedule",
+        "criteria": {
+            "signal_types": ["income_stability"],
+            "min_stability_score": 70  # Stable income score ≥70
+        },
+        "focus": "Advanced budgeting, goal setting, investment education"
+    },
+    # Persona 3: Subscription Optimizer (formerly subscription_heavy)
+    "subscription_optimizer": {
         "priority": 3,
         "description": "Recurring merchants ≥3 AND (monthly recurring spend ≥$50 in 30d OR subscription spend share ≥10%)",
         "criteria": {
             "signal_types": ["subscription_detected"],
             "min_subscriptions": 3,
             "min_monthly_spend": 50  # ≥$50 in 30d window
+        },
+        "focus": "Subscription audit, cancellation/negotiation tips, bill alerts"
+    },
+    # Alias for backwards compatibility
+    "subscription_heavy": {
+        "priority": 3,
+        "description": "Recurring merchants ≥3 AND (monthly recurring spend ≥$50 in 30d OR subscription spend share ≥10%)",
+        "criteria": {
+            "signal_types": ["subscription_detected"],
+            "min_subscriptions": 3,
+            "min_monthly_spend": 50,  # ≥$50 in 30d window
+            "is_alias": True  # Skip during assignment
         },
         "focus": "Subscription audit, cancellation/negotiation tips, bill alerts"
     },
@@ -61,6 +94,15 @@ PERSONA_DEFINITIONS = {
             "min_growth_rate": 100
         },
         "focus": "Advanced wealth building, investment education, tax optimization, retirement planning"
+    },
+    # Persona 6: Financial Newcomer (default persona for users with no/minimal signals)
+    "financial_newcomer": {
+        "priority": 6,
+        "description": "New user with minimal financial data or signals",
+        "criteria": {
+            "default": True  # Special flag for default persona
+        },
+        "focus": "Financial basics, budgeting fundamentals, building healthy habits"
     }
 }
 
@@ -95,13 +137,21 @@ class PersonaAssigner:
         )
         all_signals = result.scalars().all()
 
-        # Filter signals by window_days
-        signals = [s for s in all_signals if s.details.get("window_days") == self.window_days]
+        # Filter signals by window_days (if window_days is present in signal details)
+        # If signal doesn't have window_days specified, include it (for backwards compatibility with tests)
+        signals = [
+            s for s in all_signals
+            if s.details.get("window_days") == self.window_days or "window_days" not in s.details
+        ]
 
         # Evaluate each persona
         assigned_personas = []
 
         for persona_type, definition in PERSONA_DEFINITIONS.items():
+            # Skip default personas and aliases in first pass
+            if definition["criteria"].get("default") or definition["criteria"].get("is_alias"):
+                continue
+
             if self._meets_criteria(signals, definition["criteria"]):
                 persona = Persona(
                     user_id=user_id,
@@ -112,8 +162,18 @@ class PersonaAssigner:
                 )
                 assigned_personas.append(persona)
 
-        # If no personas assigned, user doesn't match any specific persona for this window
-        # Don't assign default - let operator see no match
+        # If no personas assigned, assign the default financial_newcomer persona
+        if not assigned_personas:
+            definition = PERSONA_DEFINITIONS.get("financial_newcomer")
+            if definition:
+                persona = Persona(
+                    user_id=user_id,
+                    window_days=self.window_days,
+                    persona_type="financial_newcomer",
+                    priority_rank=definition["priority"],
+                    criteria_met="default (no signals matched specific personas)"
+                )
+                assigned_personas.append(persona)
 
         # Sort by priority (lower number = higher priority)
         assigned_personas.sort(key=lambda p: p.priority_rank)
@@ -150,6 +210,14 @@ class PersonaAssigner:
                     # TODO: Implement cashflow buffer calculation
                     # For now, just check median pay gap
                     if median_pay_gap > criteria["min_median_pay_gap"]:
+                        return True
+            return False
+
+        # Income Stable - just stable income score, no other requirements
+        if "min_stability_score" in criteria and "max_credit_utilization" not in criteria:
+            for signal in relevant_signals:
+                if signal.signal_type == "income_stability":
+                    if signal.value >= criteria["min_stability_score"]:
                         return True
             return False
 

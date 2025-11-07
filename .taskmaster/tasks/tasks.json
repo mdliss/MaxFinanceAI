@@ -239,7 +239,7 @@
         "description": "Document the most critical technical decisions and rationale for framework selection, database choice, and OpenAI integration.",
         "details": "Create a concise decision log focusing on the top 3-4 critical technical choices. Include rationale for selecting FastAPI, SQLite, and OpenAI integration, highlighting key trade-offs.",
         "testStrategy": "Review decision log for clarity and ensure the most critical decisions are documented with clear rationale.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
         "subtasks": []
@@ -250,7 +250,7 @@
         "description": "Execute the evaluation endpoint to produce basic metrics and export them.",
         "details": "Run the evaluation endpoint for all test users. Export the basic metrics in JSON format.",
         "testStrategy": "Verify that the evaluation metrics are generated and exported correctly in JSON format.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
         "subtasks": []
@@ -261,7 +261,7 @@
         "description": "Capture basic timing data for pipeline execution and API responses during normal operation.",
         "details": "Measure and record the time taken for pipeline execution and API responses under normal conditions. No need for detailed benchmarking or load testing.",
         "testStrategy": "Verify that timing measurements are recorded accurately during standard operations.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
         "subtasks": []
@@ -272,7 +272,7 @@
         "description": "Create documentation for core table schemas with field descriptions.",
         "details": "Document the core table schemas, including field names and types. Provide brief descriptions for each field.",
         "testStrategy": "Review documentation for completeness and accuracy. Ensure field names and types match the actual database schema.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
         "subtasks": []
@@ -283,7 +283,7 @@
         "description": "Document the main OpenAI API integration points and primary prompt templates.",
         "details": "Focus on documenting the primary OpenAI integration locations and their purposes. Include essential prompt templates for recommendation generation. Simplify explanations of model selection and guardrail prompts for tone detection and PII filtering.",
         "testStrategy": "Verify that the main AI integration points and primary prompt templates are documented. Ensure that the documentation is clear and concise.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
         "subtasks": []
@@ -294,7 +294,7 @@
         "description": "Write a brief technical summary focusing on core system architecture and key achievements.",
         "details": "Document a high-level overview of the system architecture and highlight major technical achievements.",
         "testStrategy": "Review summary for clarity and ensure core architecture and key achievements are accurately described.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
         "subtasks": []

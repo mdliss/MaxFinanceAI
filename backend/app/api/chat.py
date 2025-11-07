@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, AsyncGenerator
 import uuid
+import json
 from datetime import datetime
 
 from app.database import get_db
@@ -174,6 +176,143 @@ async def send_message(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="I'm experiencing technical difficulties. Please try again in a moment."
         )
+
+
+@router.post("/message/stream")
+async def stream_message(
+    request: ChatRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Stream a message response from the financial chatbot in real-time.
+
+    This endpoint provides a streaming version of /message with ChatGPT-like
+    typewriter effect. Responses are sent as Server-Sent Events (SSE).
+
+    Args:
+        request: ChatRequest with user_id, message, and optional conversation_id
+
+    Returns:
+        StreamingResponse with SSE events containing text chunks and metadata
+
+    Raises:
+        404: User not found
+        403: User has not provided consent
+        500: LLM API error or other server error
+    """
+    # 1. Validate user exists and has consent
+    result = await db.execute(
+        select(User).where(User.user_id == request.user_id)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User {request.user_id} not found"
+        )
+
+    if not user.consent_status:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User has not provided consent for AI features"
+        )
+
+    # 2. Generate or use existing conversation_id
+    conversation_id = request.conversation_id or str(uuid.uuid4())
+
+    # 3. Save user message
+    user_message = ChatMessage(
+        user_id=request.user_id,
+        conversation_id=conversation_id,
+        role="user",
+        content=request.message,
+        created_at=datetime.utcnow()
+    )
+    db.add(user_message)
+    await db.commit()
+    await db.refresh(user_message)
+
+    async def event_generator() -> AsyncGenerator[str, None]:
+        """Generate SSE events for streaming response."""
+        accumulated_response = ""
+        message_id = None
+        tokens_used = 0
+        model = ""
+
+        try:
+            # 4. Build financial context
+            context_builder = ContextBuilder(db)
+            context = await context_builder.build_context(request.user_id, max_tokens=6000)
+
+            # 5. Get conversation history
+            history_result = await db.execute(
+                select(ChatMessage)
+                .where(ChatMessage.conversation_id == conversation_id)
+                .where(ChatMessage.message_id != user_message.message_id)
+                .order_by(ChatMessage.created_at.desc())
+                .limit(5)
+            )
+            history = list(reversed(history_result.scalars().all()))
+            history_formatted = [
+                {"role": msg.role, "content": msg.content}
+                for msg in history
+                if msg.role in ["user", "assistant"]
+            ]
+
+            # 6. Build user message with context
+            user_message_with_context = build_user_message(context, request.message)
+
+            # 7. Stream LLM response
+            llm = get_llm_service()
+
+            # Send initial metadata
+            yield f"data: {json.dumps({'type': 'start', 'conversation_id': conversation_id})}\n\n"
+
+            # Stream content chunks
+            async for chunk in llm.stream_message(
+                system_prompt=SYSTEM_PROMPT_V1,
+                user_message=user_message_with_context,
+                conversation_history=history_formatted,
+                max_tokens=1024,
+                temperature=0.7
+            ):
+                accumulated_response += chunk
+                yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+
+            # 8. Save assistant response to database
+            assistant_message = ChatMessage(
+                user_id=request.user_id,
+                conversation_id=conversation_id,
+                role="assistant",
+                content=accumulated_response,
+                tokens_used=0,  # Token count not available in streaming
+                response_time_ms=0,  # Time not tracked for streaming
+                model_used="gpt-4o",  # Model from config
+                created_at=datetime.utcnow()
+            )
+            db.add(assistant_message)
+            await db.commit()
+            await db.refresh(assistant_message)
+
+            message_id = assistant_message.message_id
+
+            # Send completion event
+            yield f"data: {json.dumps({'type': 'done', 'message_id': message_id, 'conversation_id': conversation_id})}\n\n"
+
+        except Exception as e:
+            # Send error event
+            error_msg = str(e) if str(e) else "Streaming error occurred"
+            yield f"data: {json.dumps({'type': 'error', 'error': error_msg})}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )
 
 
 @router.get("/history/{user_id}")

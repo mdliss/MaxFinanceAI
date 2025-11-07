@@ -6,13 +6,22 @@ import type { UserProfile } from '@/types';
 
 interface BehavioralSignalsProps {
   userId: string;
+  profile?: UserProfile | null;
 }
 
-export default function BehavioralSignals({ userId }: BehavioralSignalsProps) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function BehavioralSignals({ userId, profile: profileProp }: BehavioralSignalsProps) {
+  const [profile, setProfile] = useState<UserProfile | null>(profileProp || null);
+  const [loading, setLoading] = useState(!profileProp);
 
   useEffect(() => {
+    // If profile is passed as prop, use it directly (avoid duplicate fetch)
+    if (profileProp) {
+      setProfile(profileProp);
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise fetch it
     const fetchProfile = async () => {
       try {
         const data = await api.getUserProfile(userId);
@@ -24,7 +33,7 @@ export default function BehavioralSignals({ userId }: BehavioralSignalsProps) {
       }
     };
     fetchProfile();
-  }, [userId]);
+  }, [userId, profileProp]);
 
   if (loading) {
     return (
@@ -38,16 +47,16 @@ export default function BehavioralSignals({ userId }: BehavioralSignalsProps) {
     );
   }
 
-  const getSignalIcon = (signalType: string) => {
-    const icons: Record<string, string> = {
-      credit_utilization: '💳',
-      subscription_detection: '📱',
-      savings_growth: '💰',
-      income_stability: '💵',
-      spending_surge: '📈',
-      emergency_fund: '🏦',
+  const getSignalLabel = (signalType: string) => {
+    const labels: Record<string, string> = {
+      credit_utilization: 'Credit',
+      subscription_detection: 'Subscription',
+      savings_growth: 'Savings',
+      income_stability: 'Income',
+      spending_surge: 'Spending',
+      emergency_fund: 'Emergency Fund',
     };
-    return icons[signalType] || '📊';
+    return labels[signalType] || 'Signal';
   };
 
   const getSignalColor = (signalType: string, value: number) => {
@@ -106,12 +115,12 @@ export default function BehavioralSignals({ userId }: BehavioralSignalsProps) {
                 Based on {persona.window_days}-day analysis
               </p>
             </div>
-            <div className="text-5xl">
-              {persona.persona_type === 'savings_builder' ? '💰' :
-               persona.persona_type === 'credit_optimizer' ? '💳' :
-               persona.persona_type === 'subscription_heavy' ? '📱' :
-               persona.persona_type === 'variable_income' ? '📊' :
-               '🎯'}
+            <div className="text-sm font-bold text-[var(--accent-primary)] uppercase tracking-wide">
+              {persona.persona_type === 'savings_builder' ? 'Savings' :
+               persona.persona_type === 'credit_optimizer' ? 'Credit' :
+               persona.persona_type === 'subscription_heavy' ? 'Subscriptions' :
+               persona.persona_type === 'variable_income' ? 'Income' :
+               'Financial'}
             </div>
           </div>
         </div>
@@ -133,7 +142,9 @@ export default function BehavioralSignals({ userId }: BehavioralSignalsProps) {
               )}`}
             >
               <div className="flex items-start gap-3">
-                <div className="text-2xl">{getSignalIcon(signal.signal_type)}</div>
+                <div className="text-xs font-semibold px-2 py-1 bg-[var(--accent-primary)]/10 rounded">
+                  {getSignalLabel(signal.signal_type)}
+                </div>
                 <div className="flex-1">
                   <div className="flex items-start justify-between">
                     <div>
@@ -157,7 +168,11 @@ export default function BehavioralSignals({ userId }: BehavioralSignalsProps) {
           ))
         ) : (
           <div className="text-center py-8 text-[var(--text-secondary)]">
-            <p className="text-4xl mb-2">📊</p>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
             <p>No behavioral signals detected yet</p>
             <p className="text-xs mt-1">Connect your accounts to start tracking</p>
           </div>

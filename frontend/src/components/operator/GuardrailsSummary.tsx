@@ -138,7 +138,6 @@ export default function GuardrailsSummary() {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-2xl">{toneResult.valid ? '✓' : '✗'}</span>
                   <span
                     className={`font-semibold ${
                       toneResult.valid ? 'text-green-400' : 'text-red-400'

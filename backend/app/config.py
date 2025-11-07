@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     backend_cors_origins: list[str] = ["http://localhost:3001"]
 
     # Application
-    app_name: str = "SpendSense"
+    app_name: str = "FinanceMaxAI"
     debug: bool = True
 
     # LLM Configuration

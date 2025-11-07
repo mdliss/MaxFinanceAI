@@ -240,9 +240,8 @@ async def test_quality_metrics_with_recommendations(async_db):
     )
     async_db.add(test_persona)
 
-    # Create test recommendation (created_at will be auto-set by database)
+    # Create test recommendation (created_at and recommendation_id will be auto-set by database)
     test_rec = Recommendation(
-        recommendation_id=f"test_eval_rec_{user.user_id}",
         user_id=user.user_id,
         persona_type="savings_builder",
         content_type="article",
@@ -250,6 +249,7 @@ async def test_quality_metrics_with_recommendations(async_db):
         description="This is a test article for evaluation metrics",
         rationale="You are saving consistently each month, this article will help you optimize your savings strategy.",
         disclaimer="Educational content only",
+        eligibility_met=True,  # Boolean, not integer
         approval_status="pending"
     )
     async_db.add(test_rec)

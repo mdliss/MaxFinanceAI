@@ -34,7 +34,7 @@ async def get_guardrails_summary(db: AsyncSession = Depends(get_db)):
     summary = guardrails.get_guardrail_summary()
 
     return {
-        "message": "Active guardrail rules for SpendSense recommendations",
+        "message": "Active guardrail rules for FinanceMaxAI recommendations",
         "guardrails": summary
     }
 
