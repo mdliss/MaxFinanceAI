@@ -56,7 +56,20 @@ export default function GoalsPage() {
       setLoading(true);
       try {
         const data = await api.goals.getGoals(userId);
-        setGoals(data);
+        // Map API response to match frontend interface
+        const mappedGoals = data.map((goal: any) => ({
+          id: goal.goal_id,
+          user_id: goal.user_id,
+          name: goal.title,
+          target_amount: goal.target_amount,
+          current_amount: goal.current_amount,
+          deadline: goal.target_date,
+          category: goal.goal_type,
+          status: goal.status,
+          created_at: goal.created_at,
+          progress_percentage: goal.progress_percent
+        }));
+        setGoals(mappedGoals);
       } catch (error) {
         console.error('Error fetching goals:', error);
       } finally {
@@ -98,7 +111,19 @@ export default function GoalsPage() {
 
       // Refresh goals list
       const data = await api.goals.getGoals(userId);
-      setGoals(data);
+      const mappedGoals = data.map((goal: any) => ({
+        id: goal.goal_id,
+        user_id: goal.user_id,
+        name: goal.title,
+        target_amount: goal.target_amount,
+        current_amount: goal.current_amount,
+        deadline: goal.target_date,
+        category: goal.goal_type,
+        status: goal.status,
+        created_at: goal.created_at,
+        progress_percentage: goal.progress_percent
+      }));
+      setGoals(mappedGoals);
     } catch (error) {
       console.error('Error creating goal:', error);
       alert('Failed to create goal. Please try again.');

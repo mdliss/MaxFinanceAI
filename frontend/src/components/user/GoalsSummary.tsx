@@ -16,7 +16,15 @@ export default function GoalsSummary({ userId }: GoalsSummaryProps) {
     const fetchGoals = async () => {
       try {
         const data = await api.goals.getGoals(userId);
-        setGoals(data.slice(0, 3)); // Show top 3 goals
+        // Map API response to match frontend interface
+        const mappedGoals = data.map((goal: any) => ({
+          id: goal.goal_id,
+          name: goal.title,
+          target_amount: goal.target_amount,
+          current_amount: goal.current_amount,
+          progress_percentage: (goal.current_amount / goal.target_amount) * 100
+        }));
+        setGoals(mappedGoals.slice(0, 3)); // Show top 3 goals
       } catch (error) {
         console.error('Error fetching goals:', error);
       } finally {

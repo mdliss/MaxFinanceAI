@@ -57,7 +57,21 @@ export default function BudgetsPage() {
       setLoading(true);
       try {
         const data = await api.budgets.getBudgets(userId);
-        setBudgets(data);
+        // Map API response to match frontend interface
+        const mappedBudgets = data.map((budget: any) => ({
+          id: budget.budget_id,
+          user_id: budget.user_id,
+          category: budget.category,
+          limit: budget.amount,
+          period: budget.period,
+          start_date: budget.period_start_date,
+          spent: budget.spent_amount,
+          remaining: budget.remaining_amount,
+          status: budget.status,
+          created_at: budget.created_at,
+          spending_percentage: (budget.spent_amount / budget.amount) * 100
+        }));
+        setBudgets(mappedBudgets);
       } catch (error) {
         console.error('Error fetching budgets:', error);
       } finally {
@@ -97,7 +111,20 @@ export default function BudgetsPage() {
 
       // Refresh budgets list
       const data = await api.budgets.getBudgets(userId);
-      setBudgets(data);
+      const mappedBudgets = data.map((budget: any) => ({
+        id: budget.budget_id,
+        user_id: budget.user_id,
+        category: budget.category,
+        limit: budget.amount,
+        period: budget.period,
+        start_date: budget.period_start_date,
+        spent: budget.spent_amount,
+        remaining: budget.remaining_amount,
+        status: budget.status,
+        created_at: budget.created_at,
+        spending_percentage: (budget.spent_amount / budget.amount) * 100
+      }));
+      setBudgets(mappedBudgets);
     } catch (error) {
       console.error('Error creating budget:', error);
       alert('Failed to create budget. Please try again.');

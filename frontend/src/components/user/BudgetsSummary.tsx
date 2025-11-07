@@ -16,10 +16,20 @@ export default function BudgetsSummary({ userId }: BudgetsSummaryProps) {
     const fetchBudgets = async () => {
       try {
         const data = await api.budgets.getBudgets(userId);
+        // Map API response to match frontend interface
+        const mappedBudgets = data.map((budget: any) => ({
+          id: budget.budget_id,
+          user_id: budget.user_id,
+          category: budget.category,
+          limit: budget.amount,
+          spent: budget.spent_amount,
+          remaining: budget.remaining_amount,
+          spending_percentage: (budget.spent_amount / budget.amount) * 100
+        }));
         // Show top 3 budgets sorted by percentage (highest first)
-        const sorted = [...data].sort((a, b) => {
-          const aPercent = a.spending_percentage || ((a.spent / a.limit) * 100);
-          const bPercent = b.spending_percentage || ((b.spent / b.limit) * 100);
+        const sorted = [...mappedBudgets].sort((a, b) => {
+          const aPercent = a.spending_percentage || 0;
+          const bPercent = b.spending_percentage || 0;
           return bPercent - aPercent;
         });
         setBudgets(sorted.slice(0, 3));

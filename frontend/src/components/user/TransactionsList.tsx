@@ -2,24 +2,33 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import type { UserProfile } from '@/types';
+
+interface Transaction {
+  transaction_id: string;
+  date: string;
+  amount: number;
+  merchant_name: string;
+  category_primary: string;
+  category_detailed: string;
+  payment_channel: string;
+}
 
 interface TransactionsListProps {
   userId: string;
 }
 
 export default function TransactionsList({ userId }: TransactionsListProps) {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('all');
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchTransactions = async () => {
       try {
         setLoading(true);
-        const data = await api.getUserProfile(userId);
-        setProfile(data);
+        const data = await api.getTransactions(userId, 10);
+        setTransactions(data);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load transactions');
@@ -28,7 +37,7 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
       }
     };
 
-    fetchProfile();
+    fetchTransactions();
   }, [userId]);
 
   if (loading) {
@@ -46,9 +55,9 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
     );
   }
 
-  if (error || !profile) {
+  if (error) {
     return (
-      <div className="card-dark p-6 transition-smooth border-l-4 border-red-500">
+      <div className="card-dark p-6 border-l-4 border-red-500">
         <p className="text-red-400">
           {error || 'Unable to load transactions'}
         </p>
@@ -56,43 +65,18 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
     );
   }
 
-  // Extract subscription signals which contain merchant/spending data
-  const subscriptionSignals = profile.signals?.filter(s => s.signal_type === 'subscription_detected') || [];
-  const spendingSurges = profile.signals?.filter(s => s.signal_type === 'spending_surge') || [];
-
-  // Create transaction-like items from signals
-  const transactions = [
-    ...subscriptionSignals.map(s => ({
-      transaction_id: s.signal_id,
-      merchant: s.details.merchant,
-      amount: -(s.details.average_amount || 0),
-      category: 'subscription',
-      date: s.computed_at,
-    })),
-    ...spendingSurges.map(s => ({
-      transaction_id: s.signal_id,
-      merchant: s.details.category || 'Various',
-      amount: -(s.details.total_spent || s.value),
-      category: s.details.category?.toLowerCase() || 'other',
-      date: s.computed_at,
-    }))
-  ];
-
   // Filter transactions by category
   const filteredTransactions = filter === 'all'
     ? transactions
-    : transactions.filter(t => t.category === filter);
+    : transactions.filter(t => t.category_detailed?.toLowerCase() === filter.toLowerCase());
 
-  // Get unique categories
-  const categories = Array.from(new Set(transactions.map(t => t.category)));
+  // Get unique categories from transactions
+  const categories = Array.from(new Set(transactions.map(t => t.category_detailed).filter(Boolean)));
 
   // Sort transactions by date (most recent first)
   const sortedTransactions = [...filteredTransactions].sort((a, b) => {
     return new Date(b.date).getTime() - new Date(a.date).getTime();
   });
-
-  // Show only last 10 transactions
-  const recentTransactions = sortedTransactions.slice(0, 10);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -112,16 +96,16 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      groceries: 'text-green-400',
-      dining: 'text-orange-400',
-      shopping: 'text-purple-400',
-      entertainment: 'text-pink-400',
-      transportation: 'text-blue-400',
-      utilities: 'text-yellow-400',
-      healthcare: 'text-red-400',
-      other: 'text-gray-400',
+      groceries: 'bg-green-500/10 text-green-400 border-green-500/20',
+      restaurants: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+      'general merchandise': 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+      entertainment: 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+      'gas stations': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+      utilities: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+      paycheck: 'bg-green-600/10 text-green-500 border-green-600/20',
+      income: 'bg-green-600/10 text-green-500 border-green-600/20',
     };
-    return colors[category.toLowerCase()] || 'text-gray-400';
+    return colors[category.toLowerCase()] || 'bg-gray-500/10 text-gray-400 border-gray-500/20';
   };
 
   return (
@@ -144,25 +128,24 @@ export default function TransactionsList({ userId }: TransactionsListProps) {
         </div>
       </div>
 
-      {recentTransactions.length === 0 ? (
+      {sortedTransactions.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-[var(--text-secondary)]">No transactions found</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {recentTransactions.map((transaction) => (
+          {sortedTransactions.map((transaction) => (
             <div
               key={transaction.transaction_id}
-              className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] transition-smooth hover:border-[var(--accent-primary)]"
+              className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-color)] hover:border-[var(--accent-primary)]"
             >
               <div className="flex-1">
                 <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full ${getCategoryColor(transaction.category)}`}></div>
                   <div>
-                    <p className="font-medium">{transaction.merchant}</p>
+                    <p className="font-medium">{transaction.merchant_name}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded ${getCategoryColor(transaction.category)} bg-opacity-10`}>
-                        {transaction.category}
+                      <span className={`text-xs px-2 py-0.5 rounded border ${getCategoryColor(transaction.category_detailed)}`}>
+                        {transaction.category_detailed}
                       </span>
                       <span className="text-xs text-[var(--text-secondary)]">
                         {formatDate(transaction.date)}

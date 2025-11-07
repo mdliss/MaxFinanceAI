@@ -15,7 +15,7 @@ import sys
 sys.path.insert(0, '/app')
 
 from app.database import async_session_maker
-from app.models import User, Account, Transaction, Signal, Persona, Recommendation
+from app.models import User, Account, Transaction, Signal, Persona, Recommendation, FinancialGoal, Budget
 
 USER_ID = "user_05559915742f"
 
@@ -228,6 +228,113 @@ async def populate_recommendations(db: AsyncSession):
     await db.commit()
     print(f"✅ Created {len(recommendations)} recommendations")
 
+async def populate_goals(db: AsyncSession):
+    """Create financial goals"""
+    print("Creating financial goals...")
+
+    goals = [
+        FinancialGoal(
+            user_id=USER_ID,
+            name="Emergency Fund",
+            target_amount=10000.00,
+            current_amount=6500.00,
+            deadline=(datetime.now() + timedelta(days=180)).date(),
+            category="savings",
+            status="active"
+        ),
+        FinancialGoal(
+            user_id=USER_ID,
+            name="Vacation to Hawaii",
+            target_amount=5000.00,
+            current_amount=1200.00,
+            deadline=(datetime.now() + timedelta(days=270)).date(),
+            category="savings",
+            status="active"
+        ),
+        FinancialGoal(
+            user_id=USER_ID,
+            name="Pay Off Credit Card",
+            target_amount=2500.00,
+            current_amount=1800.00,
+            deadline=(datetime.now() + timedelta(days=90)).date(),
+            category="debt_payoff",
+            status="active"
+        ),
+        FinancialGoal(
+            user_id=USER_ID,
+            name="New Laptop Fund",
+            target_amount=2000.00,
+            current_amount=450.00,
+            deadline=(datetime.now() + timedelta(days=150)).date(),
+            category="purchase",
+            status="active"
+        )
+    ]
+
+    for goal in goals:
+        db.add(goal)
+
+    await db.commit()
+    print(f"✅ Created {len(goals)} financial goals")
+
+async def populate_budgets(db: AsyncSession):
+    """Create monthly budgets"""
+    print("Creating budgets...")
+
+    budgets = [
+        Budget(
+            user_id=USER_ID,
+            category="groceries",
+            limit=600.00,
+            spent=485.50,
+            period="monthly",
+            start_date=datetime.now().replace(day=1).date(),
+            status="active"
+        ),
+        Budget(
+            user_id=USER_ID,
+            category="dining",
+            limit=300.00,
+            spent=340.25,
+            period="monthly",
+            start_date=datetime.now().replace(day=1).date(),
+            status="active"
+        ),
+        Budget(
+            user_id=USER_ID,
+            category="entertainment",
+            limit=150.00,
+            spent=95.00,
+            period="monthly",
+            start_date=datetime.now().replace(day=1).date(),
+            status="active"
+        ),
+        Budget(
+            user_id=USER_ID,
+            category="transportation",
+            limit=200.00,
+            spent=125.75,
+            period="monthly",
+            start_date=datetime.now().replace(day=1).date(),
+            status="active"
+        ),
+        Budget(
+            user_id=USER_ID,
+            category="utilities",
+            limit=250.00,
+            spent=210.00,
+            period="monthly",
+            start_date=datetime.now().replace(day=1).date(),
+            status="active"
+        )
+    ]
+
+    for budget in budgets:
+        db.add(budget)
+
+    await db.commit()
+    print(f"✅ Created {len(budgets)} budgets")
+
 async def main():
     print("=" * 70)
     print("Creating COMPLETE user profile with V1 + V2 data")
@@ -254,6 +361,10 @@ async def main():
             await populate_personas(db)
             await populate_recommendations(db)
 
+            # Create V2 data (goals, budgets)
+            await populate_goals(db)
+            await populate_budgets(db)
+
             print("\n" + "=" * 70)
             print("✅ Complete! User now has:")
             print("=" * 70)
@@ -269,6 +380,16 @@ async def main():
             )
             txn_count = len(result.scalars().all())
 
+            result = await db.execute(
+                select(FinancialGoal).where(FinancialGoal.user_id == USER_ID)
+            )
+            goal_count = len(result.scalars().all())
+
+            result = await db.execute(
+                select(Budget).where(Budget.user_id == USER_ID)
+            )
+            budget_count = len(result.scalars().all())
+
             print(f"V1 Data:")
             print(f"  - {account_count} Accounts")
             print(f"  - {txn_count} Transactions")
@@ -276,10 +397,9 @@ async def main():
             print(f"  - 1 Persona Assignment")
             print(f"  - 2 Recommendations")
 
-            print(f"\nV2 Data (from earlier setup):")
-            print(f"  - 4 Financial Goals")
-            print(f"  - 5 Monthly Budgets")
-            print(f"  - 3 Active Alerts")
+            print(f"\nV2 Data:")
+            print(f"  - {goal_count} Financial Goals")
+            print(f"  - {budget_count} Monthly Budgets")
 
             print(f"\n🎉 Dashboard should now show complete data!")
             print(f"Visit: http://localhost:3001/dashboard")
