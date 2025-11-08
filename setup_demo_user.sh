@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Setup script for demo user user_05559915742f
+# Setup script for demo user
 
-USER_ID="user_05559915742f"
+USER_ID="demo"
 BASE_URL="http://localhost:8000/api/v1"
 
 echo "🚀 Setting up demo user: $USER_ID"

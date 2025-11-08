@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import type { EvaluationMetrics as MetricsType } from '@/types';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 export default function EvaluationMetrics() {
   const [metrics, setMetrics] = useState<MetricsType | null>(null);
@@ -115,13 +115,21 @@ export default function EvaluationMetrics() {
 
   // Prepare data for charts
   const coverageData = [
-    { name: 'With Persona & 3+ Behaviors', value: metrics.coverage.users_with_3plus_behaviors },
-    { name: 'Missing Criteria', value: metrics.coverage.total_users - metrics.coverage.users_with_3plus_behaviors },
+    {
+      name: 'Coverage Rate',
+      value: metrics.coverage.users_with_3plus_behaviors,
+      total: metrics.coverage.total_users,
+      percentage: metrics.coverage.coverage_percentage
+    },
   ];
 
   const explainabilityData = [
-    { name: 'With Rationale', value: metrics.explainability.recommendations_with_rationale },
-    { name: 'Without Rationale', value: metrics.explainability.total_recommendations - metrics.explainability.recommendations_with_rationale },
+    {
+      name: 'Explainability Rate',
+      value: metrics.explainability.recommendations_with_rationale,
+      total: metrics.explainability.total_recommendations,
+      percentage: metrics.explainability.explainability_percentage
+    },
   ];
 
   const latencyData = [
@@ -130,8 +138,6 @@ export default function EvaluationMetrics() {
     { name: 'P99', value: metrics.latency.p99_ms },
     { name: 'Avg', value: metrics.latency.avg_recommendation_generation_ms },
   ];
-
-  const CHART_COLORS = ['#2c3e50', '#cbd5e1'];
 
   return (
     <div>
@@ -229,52 +235,50 @@ export default function EvaluationMetrics() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Coverage Chart */}
+        {/* Coverage Distribution */}
         <div className="card-dark p-6 transition-smooth">
-          <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide">Coverage Distribution</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={coverageData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {coverageData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          <h3 className="text-sm font-semibold mb-6 uppercase tracking-wide">Coverage Distribution</h3>
+          <div className="space-y-4">
+            {coverageData.map((item, index) => (
+              <div key={index}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-[var(--text-secondary)]">{item.name}</span>
+                  <span className="text-sm font-semibold">
+                    {item.percentage.toFixed(1)}% ({item.value}/{item.total})
+                  </span>
+                </div>
+                <div className="w-full bg-[var(--bg-tertiary)] rounded-full h-2.5">
+                  <div
+                    className="bg-[#2c3e50] h-2.5 rounded-full transition-all duration-500"
+                    style={{ width: `${item.percentage}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Explainability Chart */}
+        {/* Explainability Distribution */}
         <div className="card-dark p-6 transition-smooth">
-          <h3 className="text-sm font-semibold mb-4 uppercase tracking-wide">Explainability Distribution</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={explainabilityData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {explainabilityData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={CHART_COLORS[index]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          <h3 className="text-sm font-semibold mb-6 uppercase tracking-wide">Explainability Distribution</h3>
+          <div className="space-y-4">
+            {explainabilityData.map((item, index) => (
+              <div key={index}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-[var(--text-secondary)]">{item.name}</span>
+                  <span className="text-sm font-semibold">
+                    {item.percentage.toFixed(1)}% ({item.value}/{item.total})
+                  </span>
+                </div>
+                <div className="w-full bg-[var(--bg-tertiary)] rounded-full h-2.5">
+                  <div
+                    className="bg-[#2c3e50] h-2.5 rounded-full transition-all duration-500"
+                    style={{ width: `${item.percentage}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Latency Chart */}

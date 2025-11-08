@@ -206,6 +206,58 @@ async def update_alert(
     return alert.to_dict()
 
 
+@router.post("/{alert_id}/dismiss")
+async def dismiss_alert(
+    alert_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Dismiss an alert by ID.
+    """
+    result = await db.execute(
+        select(Alert).where(Alert.alert_id == alert_id)
+    )
+    alert = result.scalar_one_or_none()
+
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+
+    alert.is_dismissed = True
+    if not alert.dismissed_at:
+        alert.dismissed_at = datetime.now()
+
+    await db.commit()
+    await db.refresh(alert)
+
+    return alert.to_dict()
+
+
+@router.post("/{alert_id}/mark-read")
+async def mark_alert_read(
+    alert_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Mark an alert as read by ID.
+    """
+    result = await db.execute(
+        select(Alert).where(Alert.alert_id == alert_id)
+    )
+    alert = result.scalar_one_or_none()
+
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+
+    alert.is_read = True
+    if not alert.read_at:
+        alert.read_at = datetime.now()
+
+    await db.commit()
+    await db.refresh(alert)
+
+    return alert.to_dict()
+
+
 @router.post("/{user_id}/mark-all-read")
 async def mark_all_read(
     user_id: str,

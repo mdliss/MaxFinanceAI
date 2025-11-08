@@ -316,7 +316,7 @@ export const api = {
       }),
 
     markAsRead: (alertId: number) =>
-      fetchAPI<any>(`/alerts/${alertId}/read`, {
+      fetchAPI<any>(`/alerts/${alertId}/mark-read`, {
         method: 'POST',
       }),
 

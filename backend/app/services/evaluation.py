@@ -108,7 +108,8 @@ class EvaluationService:
         )
         users_with_recs = users_with_recs_result.scalar() or 0
 
-        coverage_rate = users_with_recs / total_eligible_users if total_eligible_users > 0 else 0.0
+        # Cap at 100% - coverage rate should never exceed 1.0
+        coverage_rate = min(1.0, users_with_recs / total_eligible_users if total_eligible_users > 0 else 0.0)
 
         # Personalization: % with non-generic rationales
         personalized_count = sum(
@@ -234,7 +235,8 @@ class EvaluationService:
         )
         users_with_signals = users_with_signals_result.scalar() or 0
 
-        signal_detection_rate = users_with_signals / total_users if total_users > 0 else 0.0
+        # Cap at 100% - signal detection rate should never exceed 1.0
+        signal_detection_rate = min(1.0, users_with_signals / total_users if total_users > 0 else 0.0)
 
         # Consent rates
         consented_users_result = await self.db.execute(
@@ -242,7 +244,8 @@ class EvaluationService:
         )
         consented_users = consented_users_result.scalar() or 0
 
-        consent_rate = consented_users / total_users if total_users > 0 else 0.0
+        # Cap at 100%
+        consent_rate = min(1.0, consented_users / total_users if total_users > 0 else 0.0)
 
         return {
             "approval_rate": round(approval_rate, 3),

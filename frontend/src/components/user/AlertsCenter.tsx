@@ -4,13 +4,14 @@ import { useEffect, useState, useRef } from 'react';
 import { api } from '@/lib/api';
 
 interface Alert {
-  id: number;
+  alert_id: number;
   user_id: string;
   alert_type: string;
   severity: string;
   title: string;
   message: string;
-  status: string;
+  is_read: boolean;
+  is_dismissed: boolean;
   created_at: string;
   metadata?: any;
 }
@@ -81,7 +82,7 @@ export default function AlertsCenter({ userId }: AlertsCenterProps) {
     try {
       await api.alerts.markAsRead(alertId);
       // Update local state
-      setAlerts(alerts.map(a => a.id === alertId ? { ...a, status: 'read' } : a));
+      setAlerts(alerts.map(a => a.alert_id === alertId ? { ...a, is_read: true } : a));
       setUnreadCount(Math.max(0, unreadCount - 1));
     } catch (error) {
       console.error('Error marking alert as read:', error);
@@ -92,9 +93,9 @@ export default function AlertsCenter({ userId }: AlertsCenterProps) {
     try {
       await api.alerts.dismissAlert(alertId);
       // Remove from local state
-      setAlerts(alerts.filter(a => a.id !== alertId));
-      const alert = alerts.find(a => a.id === alertId);
-      if (alert?.status === 'unread') {
+      setAlerts(alerts.filter(a => a.alert_id !== alertId));
+      const alert = alerts.find(a => a.alert_id === alertId);
+      if (alert && !alert.is_read) {
         setUnreadCount(Math.max(0, unreadCount - 1));
       }
     } catch (error) {
@@ -198,9 +199,9 @@ export default function AlertsCenter({ userId }: AlertsCenterProps) {
               <div className="divide-y divide-[var(--border-color)]">
                 {alerts.map((alert) => (
                   <div
-                    key={alert.id}
+                    key={alert.alert_id}
                     className={`p-4 hover:bg-[var(--bg-tertiary)] ${
-                      alert.status === 'unread' ? 'bg-[var(--bg-primary)]' : ''
+                      !alert.is_read ? 'bg-[var(--bg-primary)]' : ''
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -231,16 +232,16 @@ export default function AlertsCenter({ userId }: AlertsCenterProps) {
 
                         {/* Actions */}
                         <div className="flex gap-2 mt-3">
-                          {alert.status === 'unread' && (
+                          {!alert.is_read && (
                             <button
-                              onClick={() => handleMarkAsRead(alert.id)}
+                              onClick={() => handleMarkAsRead(alert.alert_id)}
                               className="text-xs text-[var(--accent-primary)] hover:underline font-medium"
                             >
                               Mark as read
                             </button>
                           )}
                           <button
-                            onClick={() => handleDismiss(alert.id)}
+                            onClick={() => handleDismiss(alert.alert_id)}
                             className="text-xs text-[var(--text-secondary)] hover:text-red-700 hover:underline"
                           >
                             Dismiss

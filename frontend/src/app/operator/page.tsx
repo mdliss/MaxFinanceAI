@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardStats from '@/components/operator/DashboardStats';
 import ImprovedRecommendationQueue from '@/components/operator/ImprovedRecommendationQueue';
@@ -12,8 +13,15 @@ import EvaluationMetrics from '@/components/operator/EvaluationMetrics';
 type TabType = 'overview' | 'recommendations' | 'users' | 'audit' | 'metrics';
 
 export default function OperatorDashboard() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    router.push('/');
+  };
 
   const tabs: { id: TabType; label: string }[] = [
     { id: 'overview', label: 'Overview' },
@@ -32,7 +40,10 @@ export default function OperatorDashboard() {
             <Link href="/" className="text-xl font-bold tracking-tight hover:text-[var(--accent-primary)] transition-smooth">
               FinanceMaxAI
             </Link>
-            <button className="btn-secondary transition-smooth text-sm px-4 py-2">
+            <button
+              onClick={handleLogout}
+              className="btn-secondary transition-smooth text-sm px-4 py-2"
+            >
               Sign Out
             </button>
           </div>

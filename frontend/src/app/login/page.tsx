@@ -72,12 +72,12 @@ export default function LoginPage() {
                 id="userId"
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
-                placeholder="Enter your user ID (e.g., user_001)"
+                placeholder="Enter your user ID (e.g., demo)"
                 className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] placeholder-[var(--text-secondary)] transition-smooth focus:border-[var(--accent-primary)] focus:outline-none"
                 disabled={loading}
               />
               <p className="text-xs text-[var(--text-secondary)] mt-2">
-                Try: <span className="font-mono text-[var(--accent-primary)]">user_bdb7b6912c0b</span>
+                Try: <span className="font-mono text-[var(--accent-primary)]">demo</span>
               </p>
             </div>
 

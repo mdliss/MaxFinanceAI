@@ -945,16 +945,20 @@ async def get_evaluation_metrics(db: AsyncSession = Depends(get_db)):
     )
     users_with_persona = result.scalar() or 0
 
-    # Users with 3+ signals (behaviors)
+    # Users with 3+ distinct signal types (behaviors)
     result = await db.execute(
-        select(Signal.user_id, func.count(Signal.signal_id).label('signal_count'))
+        select(Signal.user_id, func.count(func.distinct(Signal.signal_type)).label('signal_type_count'))
         .group_by(Signal.user_id)
-        .having(func.count(Signal.signal_id) >= 3)
+        .having(func.count(func.distinct(Signal.signal_type)) >= 3)
     )
     users_with_3plus_behaviors = len(result.all())
 
-    # Coverage percentage
-    coverage_percentage = (users_with_3plus_behaviors / total_users * 100) if total_users > 0 else 0
+    # Coverage percentage - cap at 100%
+    coverage_percentage = min(100.0, (users_with_3plus_behaviors / total_users * 100) if total_users > 0 else 0)
+
+    # Also cap the counts to not exceed total_users
+    users_with_persona = min(users_with_persona, total_users)
+    users_with_3plus_behaviors = min(users_with_3plus_behaviors, total_users)
 
     # Total recommendations
     result = await db.execute(select(func.count(Recommendation.recommendation_id)))

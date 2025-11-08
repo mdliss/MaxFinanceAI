@@ -66,13 +66,15 @@ async def check_coverage():
             if persona_count > 0 and unique_behaviors >= 3:
                 users_fully_covered += 1
 
+        # Calculate coverage and cap at 100%
         coverage_pct = (users_fully_covered / total_users * 100) if total_users > 0 else 0
+        coverage_pct = min(100.0, coverage_pct)  # Cap at 100%
 
         return {
             "total_users": total_users,
             "users_with_persona": users_with_persona,
             "users_with_3_behaviors": users_with_3_behaviors,
-            "users_fully_covered": users_fully_covered,
+            "users_fully_covered": min(users_fully_covered, total_users),  # Cap at total users
             "coverage_percentage": round(coverage_pct, 2),
             "avg_behaviors_per_user": round(sum(behavior_counts) / len(behavior_counts), 2) if behavior_counts else 0,
             "target": 100.0,
@@ -82,14 +84,30 @@ async def check_coverage():
 
 async def check_time_windows():
     """Verify signals are computed for BOTH 30-day and 180-day windows"""
+    import json
+
     async with async_session_maker() as db:
         # Get all signals
         result = await db.execute(select(Signal))
         signals = result.scalars().all()
 
-        signals_30d = [s for s in signals if s.details.get("window_days") == 30]
-        signals_180d = [s for s in signals if s.details.get("window_days") == 180]
-        signals_no_window = [s for s in signals if "window_days" not in s.details]
+        signals_30d = []
+        signals_180d = []
+        signals_no_window = []
+
+        for s in signals:
+            try:
+                details = json.loads(s.details) if isinstance(s.details, str) else s.details
+                window_days = details.get("window_days") if isinstance(details, dict) else None
+
+                if window_days == 30:
+                    signals_30d.append(s)
+                elif window_days == 180:
+                    signals_180d.append(s)
+                elif window_days is None:
+                    signals_no_window.append(s)
+            except (json.JSONDecodeError, AttributeError):
+                signals_no_window.append(s)
 
         # Check users have signals in both windows
         users_30d = set(s.user_id for s in signals_30d)
