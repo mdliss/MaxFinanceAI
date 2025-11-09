@@ -64,7 +64,11 @@
       "Bash(docker-compose:*)",
       "Bash(vercel:*)",
       "WebFetch(domain:railway.com)",
-      "WebFetch(domain:frontend-ten-chi-27.vercel.app)"
+      "WebFetch(domain:frontend-ten-chi-27.vercel.app)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(DATABASE_URL=\"sqlite+aiosqlite:///./data/spendsense.db\" python:*)"
     ],
     "deny": [],
     "ask": []

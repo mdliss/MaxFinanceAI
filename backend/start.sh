@@ -1,19 +1,10 @@
 #!/bin/bash
 set -e
 
-# Ensure data directory exists
-mkdir -p /app/data
+echo "🚀 Initializing database and demo user..."
+python initialize_all.py || true
 
-echo "🚀 Initializing database..."
-python init_db.py
-
-# Wait a moment for database file to be fully written
-sleep 1
-
-echo "👤 Creating demo user..."
-python create_demo_user.py || true
-
-echo "📊 Adding demo data..."
+echo "📊 Adding demo goals and budgets..."
 python add_demo_goals_budgets.py || true
 
 echo "✅ Starting server..."

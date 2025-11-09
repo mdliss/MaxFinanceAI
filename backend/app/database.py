@@ -2,9 +2,18 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from app.config import settings
 import os
+from pathlib import Path
 
-# Ensure data directory exists
-os.makedirs("data", exist_ok=True)
+# Extract database directory from URL and ensure it exists
+# Database URL format: sqlite+aiosqlite:////app/data/spendsense.db
+db_url = settings.database_url
+if "sqlite" in db_url:
+    # Extract path from sqlite URL (remove sqlite+aiosqlite:/// prefix)
+    db_path = db_url.split("sqlite+aiosqlite:///")[-1]
+    db_dir = str(Path(db_path).parent)
+    os.makedirs(db_dir, exist_ok=True)
+    print(f"📁 Database directory: {db_dir}")
+    print(f"📊 Database file: {db_path}")
 
 # Create async engine
 engine = create_async_engine(
