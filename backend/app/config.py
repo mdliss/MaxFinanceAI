@@ -3,7 +3,7 @@ from typing import Optional
 
 class Settings(BaseSettings):
     # Database
-    database_url: str = "sqlite+aiosqlite:///./spendsense.db"
+    database_url: str = "sqlite+aiosqlite:////app/data/spendsense.db"
 
     # API
     api_v1_prefix: str = "/api/v1"
