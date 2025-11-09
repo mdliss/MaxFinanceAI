@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 8000
 
 # Run the application (use shell form to allow $PORT expansion)
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD python init_db.py && python create_demo_user.py && python add_demo_goals_budgets.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
