@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """Initialize database with tables and demo data"""
 import asyncio
-from sqlalchemy import inspect
 from app.database import engine, Base
-from app.models import User, Transaction, Goal, Budget, Consent, Recommendation
 
 async def init_database():
     """Create all tables if they don't exist"""
