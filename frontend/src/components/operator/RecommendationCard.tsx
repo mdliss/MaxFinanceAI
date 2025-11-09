@@ -33,12 +33,12 @@ export default function RecommendationCard({
   const [flagSeverity, setFlagSeverity] = useState<'low' | 'medium' | 'high'>('medium');
 
   const getStatusBadge = () => {
-    const isFlagged = recommendation.approval_status === 'flagged';
+    const isFlagged = recommendation.approval_status === 'review';
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-medium transition-smooth ${
         isFlagged ? 'bg-red-500/10 text-red-700' : 'bg-slate-500/10 text-slate-700'
       }`}>
-        {isFlagged ? 'Flagged' : 'Active'}
+        {isFlagged ? 'In Review' : 'Active'}
       </span>
     );
   };

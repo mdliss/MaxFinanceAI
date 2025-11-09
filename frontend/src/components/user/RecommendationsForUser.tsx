@@ -42,8 +42,7 @@ export default function RecommendationsForUser({ userId }: RecommendationsForUse
         user_id: userId,
         recommendation_id: recommendationId,
         rating,
-        helpful,
-        comments: '',
+        comment: '',
       });
 
       // Update local state

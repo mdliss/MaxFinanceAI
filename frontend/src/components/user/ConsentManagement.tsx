@@ -24,7 +24,8 @@ export default function ConsentManagement({ userId }: ConsentManagementProps) {
   const fetchConsentStatus = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/v1/consent/${userId}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+      const response = await fetch(`${apiUrl}/consent/${userId}`);
       const data = await response.json();
       setConsent(data);
     } catch (err) {
@@ -37,7 +38,8 @@ export default function ConsentManagement({ userId }: ConsentManagementProps) {
   const updateConsent = async (status: boolean) => {
     try {
       setUpdating(true);
-      const response = await fetch('http://localhost:8000/api/v1/consent/', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+      const response = await fetch(`${apiUrl}/consent/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

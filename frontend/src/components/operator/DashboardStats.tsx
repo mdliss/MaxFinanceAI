@@ -37,9 +37,7 @@ export default function DashboardStats() {
       // Improved feedback message with better context
       const feedbackMessage = `${result.message}\n\n` +
         `Summary:\n` +
-        `• Newly flagged: ${result.newly_flagged_count}\n` +
-        `• Total in review queue: ${result.total_in_review}\n` +
-        `• Total scanned: ${result.total_scanned}\n\n` +
+        `• Flagged count: ${result.flagged_count}\n` +
         `Rules applied:\n${result.rules_applied.map((r: string) => `  • ${r}`).join('\n')}`;
 
       alert(feedbackMessage);

@@ -23,7 +23,8 @@ export default function LoginPage() {
       setLoading(true);
 
       // Verify user exists
-      const response = await fetch(`http://localhost:8000/api/v1/users/${userId}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+      const response = await fetch(`${apiUrl}/users/${userId}`);
 
       if (!response.ok) {
         throw new Error('User not found');

@@ -37,6 +37,7 @@ export interface Recommendation {
   eligibility_met: boolean;
   approval_status: 'pending' | 'approved' | 'rejected' | 'review';
   operator_notes?: string;
+  disclaimer?: string;
   created_at: string;
 }
 

@@ -61,7 +61,10 @@
       "Bash(./setup_demo_user.sh)",
       "Bash(bash:*)",
       "Bash(head -10 echo \"\" echo \"✅ Frontend: http://localhost:3001 (RUNNING)\" echo \"✅ Backend: http://localhost:8000 (RUNNING)\" echo \"\" echo \"=== TO RESTART FRONTEND MANUALLY ===\" echo \"1. cd frontend\" echo \"2. npm run dev\" echo \"\" echo \"But you don''''t need to - it''''s already running with blue colors! 🎨\" echo \"Just open: http://localhost:3001\")",
-      "Bash(docker-compose:*)"
+      "Bash(docker-compose:*)",
+      "Bash(vercel:*)",
+      "WebFetch(domain:railway.com)",
+      "WebFetch(domain:frontend-ten-chi-27.vercel.app)"
     ],
     "deny": [],
     "ask": []

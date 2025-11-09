@@ -7,7 +7,9 @@ export default function Home() {
   const [apiStatus, setApiStatus] = useState<string>('Checking...')
 
   useEffect(() => {
-    fetch('http://localhost:8000/health')
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    const healthUrl = apiUrl.replace('/api/v1', '/health')
+    fetch(healthUrl)
       .then(res => res.json())
       .then(data => setApiStatus(data.status || 'online'))
       .catch(() => setApiStatus('offline'))
