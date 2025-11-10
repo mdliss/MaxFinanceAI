@@ -73,7 +73,9 @@
       "Bash(ln:*)",
       "Bash(DATABASE_URL=\"sqlite+aiosqlite:////Users/max/MaxFinanceAI/data/test_init.db\" python3:*)",
       "Bash(DATABASE_URL=\"sqlite+aiosqlite:///./data/spendsense.db\" sqlite3:*)",
-      "Bash(DATABASE_URL=\"sqlite+aiosqlite:///./data/spendsense.db\" uvicorn:*)"
+      "Bash(DATABASE_URL=\"sqlite+aiosqlite:///./data/spendsense.db\" uvicorn:*)",
+      "Bash(railway login:*)",
+      "Bash(railway whoami:*)"
     ],
     "deny": [],
     "ask": []
