@@ -75,7 +75,8 @@
       "Bash(DATABASE_URL=\"sqlite+aiosqlite:///./data/spendsense.db\" sqlite3:*)",
       "Bash(DATABASE_URL=\"sqlite+aiosqlite:///./data/spendsense.db\" uvicorn:*)",
       "Bash(railway login:*)",
-      "Bash(railway whoami:*)"
+      "Bash(railway whoami:*)",
+      "Bash(printf:*)"
     ],
     "deny": [],
     "ask": []

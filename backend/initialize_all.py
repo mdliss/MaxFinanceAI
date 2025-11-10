@@ -1,478 +1,460 @@
 #!/usr/bin/env python3
 """
-Combined initialization script that creates tables and demo user in single event loop.
-This solves the async SQLite engine disposal issue.
+Bootstrap script executed during Railway startup.
+
+Responsibilities:
+  * Create database tables if they do not exist
+  * Ensure the production demo user (with budgets/goals) is present
+  * Optionally trigger full synthetic dataset generation (>=150 users)
+  * Provide readiness checks so deployments can short-circuit when data exists
 """
 
+import argparse
 import asyncio
-import sys
 import os
-from datetime import datetime, timedelta
 import random
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, Tuple
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from sqlalchemy import delete, func, select
 
-from app.database import engine, Base, async_session_maker
-from app.models import User, Account, Transaction, Liability
-from app.services.signal_detector import SignalDetector
+from app.database import Base, async_session_maker, engine
+from app.models import (
+    Account,
+    Budget,
+    FinancialGoal,
+    Persona,
+    Recommendation,
+    Signal,
+    Transaction,
+    User,
+)
 from app.services.persona_assigner import PersonaAssigner
 from app.services.recommendation_engine import RecommendationEngine
-from sqlalchemy import select, delete
+from app.services.signal_detector import SignalDetector
+from populate_full_dataset import generate_full_dataset
+
+DEFAULT_USER_COUNT = int(os.getenv("DATASET_USER_COUNT", "150"))
+FLAG_PATH = Path(os.getenv("DATASET_FLAG_PATH", "/app/data/full_dataset.flag"))
 
 
-async def create_tables():
-    """Create all database tables"""
-    print("🚀 Creating database tables...")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    print("✅ Database tables created successfully\n")
+# ---------------------------------------------------------------------------
+# Demo user provisioning
+# ---------------------------------------------------------------------------
+
+async def delete_existing_demo(db) -> None:
+    """Remove any existing demo user data to allow clean recreation."""
+    await db.execute(delete(Transaction).where(Transaction.user_id == "demo"))
+    await db.execute(delete(Recommendation).where(Recommendation.user_id == "demo"))
+    await db.execute(delete(Persona).where(Persona.user_id == "demo"))
+    await db.execute(delete(Signal).where(Signal.user_id == "demo"))
+    await db.execute(delete(Budget).where(Budget.user_id == "demo"))
+    await db.execute(delete(FinancialGoal).where(FinancialGoal.user_id == "demo"))
+    await db.execute(delete(Account).where(Account.user_id == "demo"))
+    await db.execute(delete(User).where(User.user_id == "demo"))
+    await db.commit()
 
 
-async def create_demo_user():
-    """Create demo user with complete data"""
-    user_id = "demo"
-
-    print("=" * 60)
-    print("Creating Demo User with Complete Financial Data")
-    print("=" * 60)
-    print()
-
+async def create_demo_user(force_refresh: bool = False) -> None:
+    """Create (or refresh) the production demo user with full data."""
     async with async_session_maker() as db:
-        # Check if user exists
-        result = await db.execute(select(User).where(User.user_id == user_id))
-        existing_user = result.scalar_one_or_none()
+        existing = await db.execute(select(User).where(User.user_id == "demo"))
+        demo_user = existing.scalar_one_or_none()
 
-        if existing_user:
-            print(f"✓ User '{user_id}' already exists")
-        else:
-            # Create user
-            user = User(
-                user_id=user_id,
-                name="Demo User",
-                age=30,
-                income_level="medium",
-                consent_status=True,
-                consent_timestamp=datetime.now()
+        if demo_user and not force_refresh:
+            txn_count = await db.scalar(
+                select(func.count(Transaction.transaction_id)).where(Transaction.user_id == "demo")
             )
-            db.add(user)
-            await db.commit()
-            print(f"✓ Created user '{user_id}'")
+            if txn_count and txn_count >= 150:
+                print("✅ Demo user already populated; skipping refresh.")
+                return
+            print("ℹ️  Demo user exists but incomplete. Refreshing...")
+            await delete_existing_demo(db)
+        else:
+            await delete_existing_demo(db)
 
-        # Delete existing financial data for clean slate
-        print("\nCleaning existing data...")
-        await db.execute(delete(Transaction).where(Transaction.user_id == user_id))
-        await db.execute(delete(Liability).where(Liability.user_id == user_id))
-        await db.execute(delete(Account).where(Account.user_id == user_id))
-        await db.commit()
-        print("✓ Cleaned existing data")
+        now = datetime.utcnow()
 
-        # Create accounts
-        print("\nCreating accounts...")
+        user = User(
+            user_id="demo",
+            name="Demo User",
+            age=35,
+            income_level="medium",
+            consent_status=True,
+            consent_timestamp=now,
+            created_at=now,
+        )
+        db.add(user)
 
-        # Checking account
         checking = Account(
-            account_id=f"{user_id}_checking",
-            user_id=user_id,
+            account_id="demo_checking",
+            user_id="demo",
             type="depository",
             subtype="checking",
-            current_balance=2500.00,
-            available_balance=2500.00,
-            iso_currency_code="USD"
+            available_balance=3500.0,
+            current_balance=3500.0,
+            iso_currency_code="USD",
+            holder_category="personal",
         )
-        db.add(checking)
-
-        # Savings account
         savings = Account(
-            account_id=f"{user_id}_savings",
-            user_id=user_id,
+            account_id="demo_savings",
+            user_id="demo",
             type="depository",
             subtype="savings",
-            current_balance=8500.00,
-            available_balance=8500.00,
-            iso_currency_code="USD"
+            available_balance=12000.0,
+            current_balance=12000.0,
+            iso_currency_code="USD",
+            holder_category="personal",
         )
-        db.add(savings)
-
-        # Credit card
         credit = Account(
-            account_id=f"{user_id}_credit",
-            user_id=user_id,
+            account_id="demo_credit",
+            user_id="demo",
             type="credit",
             subtype="credit card",
-            current_balance=1200.00,
-            available_balance=3800.00,
-            credit_limit=5000.00,
-            iso_currency_code="USD"
+            available_balance=2750.0,
+            current_balance=2250.0,
+            credit_limit=5000.0,
+            iso_currency_code="USD",
+            holder_category="personal",
         )
-        db.add(credit)
+        db.add_all([checking, savings, credit])
+        await db.flush()
 
-        # Credit liability
-        liability = Liability(
-            liability_id=f"{user_id}_credit_liability",
-            account_id=credit.account_id,
-            user_id=user_id,
-            type="credit",
-            apr_percentage=18.99,
-            minimum_payment_amount=35.00,
-            last_payment_amount=150.00,
-            is_overdue=False,
-            next_payment_due_date=(datetime.now() + timedelta(days=15)).date()
-        )
-        db.add(liability)
-
-        await db.commit()
-        print("✓ Created 3 accounts (checking, savings, credit)")
-
-        # Create transactions for last 180 days
-        print("\nCreating transaction history...")
+        # Build 180 days of transactions (payroll, subscriptions, transfers, expenses)
         transactions = []
+        for day_offset in range(0, 180):
+            txn_date = (now - timedelta(days=day_offset)).date()
 
-        for days_ago in range(180):
-            date = (datetime.now() - timedelta(days=days_ago)).date()
-
-            # Income (bi-weekly)
-            if days_ago % 14 == 0:
-                transactions.append(Transaction(
-                    transaction_id=f"{user_id}_income_{date.isoformat()}",
-                    account_id=checking.account_id,
-                    user_id=user_id,
-                    date=date,
-                    amount=2000.00,
-                    merchant_name="Employer Payroll",
-                    payment_channel="other",
-                    category_primary="INCOME",
-                    category_detailed="Paycheck",
-                    pending=False
-                ))
-
-            # Subscriptions (monthly on 1st)
-            if date.day == 1:
-                for sub_name, amount in [
-                    ("Netflix", 15.99),
-                    ("Spotify", 10.99),
-                    ("Amazon Prime", 14.99)
-                ]:
-                    transactions.append(Transaction(
-                        transaction_id=f"{user_id}_sub_{sub_name}_{date.isoformat()}",
-                        account_id=credit.account_id,
-                        user_id=user_id,
-                        date=date,
-                        amount=-amount,
-                        merchant_name=sub_name,
-                        payment_channel="online",
-                        category_primary="GENERAL_SERVICES",
-                        category_detailed="Subscription",
-                        pending=False
-                    ))
-
-            # Savings transfer (monthly on 5th)
-            if date.day == 5:
-                transactions.append(Transaction(
-                    transaction_id=f"{user_id}_savings_{date.isoformat()}",
-                    account_id=checking.account_id,
-                    user_id=user_id,
-                    date=date,
-                    amount=-400.00,
-                    merchant_name="Savings Transfer",
-                    payment_channel="other",
-                    category_primary="TRANSFER_OUT",
-                    category_detailed="Savings",
-                    pending=False
-                ))
-
-            # Daily spending (2-5 transactions per day)
-            for i in range(random.randint(2, 5)):
-                categories = [
-                    ("FOOD_AND_DRINK", "Groceries", (25, 80), "Safeway"),
-                    ("FOOD_AND_DRINK", "Restaurants", (12, 45), "Restaurant"),
-                    ("TRANSPORTATION", "Gas", (35, 65), "Shell"),
-                    ("GENERAL_MERCHANDISE", "Shopping", (20, 150), "Amazon"),
-                ]
-
-                primary, detailed, (min_amt, max_amt), merchant = random.choice(categories)
-                amount = random.uniform(min_amt, max_amt)
-
-                transactions.append(Transaction(
-                    transaction_id=f"{user_id}_{date.isoformat()}_{i}_{random.randint(1000, 9999)}",
-                    account_id=credit.account_id if random.random() < 0.6 else checking.account_id,
-                    user_id=user_id,
-                    date=date,
-                    amount=-amount,
-                    merchant_name=merchant,
-                    payment_channel="in store" if random.random() < 0.5 else "online",
-                    category_primary=primary,
-                    category_detailed=detailed,
-                    pending=False
-                ))
-
-        # Add all transactions
-        for txn in transactions:
-            db.add(txn)
-
-        await db.commit()
-        print(f"✓ Created {len(transactions)} transactions")
-
-        # Run the pipeline
-        print("\nRunning detection pipeline...")
-
-        signal_detector = SignalDetector(db)
-        persona_assigner = PersonaAssigner(db)
-        rec_engine = RecommendationEngine(db)
-
-        # Detect signals for both windows
-        signals_30 = await signal_detector.detect_all_signals(user_id, window_days=30)
-        await signal_detector.save_signals(signals_30)
-        signals_180 = await signal_detector.detect_all_signals(user_id, window_days=180)
-        await signal_detector.save_signals(signals_180)
-        print(f"✓ Detected behavioral signals ({len(signals_30)} 30-day, {len(signals_180)} 180-day)")
-
-        # Assign personas
-        personas = await persona_assigner.assign_personas(user_id)
-        await persona_assigner.save_personas(user_id, personas)
-        print(f"✓ Assigned personas ({len(personas)} personas)")
-
-        # Generate recommendations
-        recommendations = await rec_engine.generate_recommendations(user_id)
-        await rec_engine.save_recommendations(user_id, recommendations)
-        await db.commit()
-        print("✓ Generated recommendations")
-
-        print("\n" + "=" * 60)
-        print("✅ DEMO USER SETUP COMPLETE!")
-        print("=" * 60)
-        print(f"\nUser ID: demo")
-        print(f"\nThe demo user now has:")
-        print("  - 3 accounts (checking, savings, credit)")
-        print("  - 180 days of transaction history")
-        print("  - Behavioral signals detected")
-        print("  - Personas assigned")
-        print("  - Personalized recommendations")
-        print()
-
-
-async def create_demo_goals_budgets():
-    """Add goals and budgets to demo user"""
-    user_id = "demo"
-
-    print("\n" + "=" * 60)
-    print("Adding Goals and Budgets for Demo User")
-    print("=" * 60)
-
-    async with async_session_maker() as db:
-        # Import here to avoid circular imports
-        from app.models import FinancialGoal, Budget
-
-        # Create goals with realistic progress
-        goals = [
-            FinancialGoal(
-                user_id=user_id,
-                goal_type="emergency_fund",
-                title="Emergency Fund",
-                description="Build a 6-month emergency fund for unexpected expenses",
-                target_amount=15000.00,
-                current_amount=3200.00,
-                progress_percent=21.33,
-                target_date=(datetime.now() + timedelta(days=266)).date().isoformat(),
-                status="active"
-            ),
-            FinancialGoal(
-                user_id=user_id,
-                goal_type="vacation",
-                title="Summer Vacation",
-                description="Save for a summer vacation to Hawaii",
-                target_amount=5000.00,
-                current_amount=1850.00,
-                progress_percent=37.0,
-                target_date=(datetime.now() + timedelta(days=250)).date().isoformat(),
-                status="active"
-            ),
-            FinancialGoal(
-                user_id=user_id,
-                goal_type="major_purchase",
-                title="New Laptop",
-                description="Save for a new MacBook Pro",
-                target_amount=2500.00,
-                current_amount=650.00,
-                progress_percent=26.0,
-                target_date=(datetime.now() + timedelta(days=120)).date().isoformat(),
-                status="active"
-            ),
-        ]
-
-        for goal in goals:
-            db.add(goal)
-
-        await db.commit()
-        print(f"✓ Created {len(goals)} financial goals with progress")
-
-        # Create budgets
-        budgets = [
-            Budget(
-                user_id=user_id,
-                category="Groceries",
-                amount=600.00,
-                period="monthly",
-                spent_amount=0.00,
-                status="active",
-                is_auto_generated=False,
-                rollover_enabled=False,
-                alert_threshold=80.0,
-                period_start_date=datetime.now().replace(day=1).date().isoformat(),
-                period_end_date=((datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).date().isoformat()
-            ),
-            Budget(
-                user_id=user_id,
-                category="Dining",
-                amount=400.00,
-                period="monthly",
-                spent_amount=0.00,
-                status="active",
-                is_auto_generated=False,
-                rollover_enabled=False,
-                alert_threshold=80.0,
-                period_start_date=datetime.now().replace(day=1).date().isoformat(),
-                period_end_date=((datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).date().isoformat()
-            ),
-            Budget(
-                user_id=user_id,
-                category="Entertainment",
-                amount=200.00,
-                period="monthly",
-                spent_amount=0.00,
-                status="active",
-                is_auto_generated=False,
-                rollover_enabled=False,
-                alert_threshold=80.0,
-                period_start_date=datetime.now().replace(day=1).date().isoformat(),
-                period_end_date=((datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).date().isoformat()
-            ),
-            Budget(
-                user_id=user_id,
-                category="Transportation",
-                amount=300.00,
-                period="monthly",
-                spent_amount=0.00,
-                status="active",
-                is_auto_generated=False,
-                rollover_enabled=False,
-                alert_threshold=80.0,
-                period_start_date=datetime.now().replace(day=1).date().isoformat(),
-                period_end_date=((datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).date().isoformat()
-            ),
-            Budget(
-                user_id=user_id,
-                category="Shopping",
-                amount=250.00,
-                period="monthly",
-                spent_amount=0.00,
-                status="active",
-                is_auto_generated=False,
-                rollover_enabled=False,
-                alert_threshold=80.0,
-                period_start_date=datetime.now().replace(day=1).date().isoformat(),
-                period_end_date=((datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)).date().isoformat()
-            ),
-        ]
-
-        for budget in budgets:
-            db.add(budget)
-
-        await db.commit()
-        print(f"✓ Created {len(budgets)} budgets")
-
-        # Update budget spending from transactions
-        print("\nCalculating budget spending from transactions...")
-        from sqlalchemy import and_
-
-        # Get current month's transactions
-        now = datetime.now()
-        period_start = now.replace(day=1)
-        period_end = (period_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-
-        # Refresh budgets to get them with IDs
-        result = await db.execute(select(Budget).where(Budget.user_id == user_id))
-        budgets = result.scalars().all()
-
-        for budget in budgets:
-            # Get transactions for this budget category
-            result = await db.execute(
-                select(Transaction).where(
-                    and_(
-                        Transaction.user_id == user_id,
-                        Transaction.date >= period_start.date(),
-                        Transaction.date <= period_end.date(),
-                        Transaction.amount < 0  # Only expenses
+            # Bi-weekly paycheck
+            if day_offset % 14 == 0:
+                transactions.append(
+                    Transaction(
+                        transaction_id=f"demo_income_{day_offset}",
+                        account_id=checking.account_id,
+                        user_id="demo",
+                        date=txn_date,
+                        amount=2000.0,
+                        merchant_name="Employer Payroll",
+                        merchant_entity_id="employer_payroll",
+                        payment_channel="other",
+                        category_primary="INCOME",
+                        category_detailed="Paycheck",
+                        pending=False,
                     )
                 )
-            )
-            transactions = result.scalars().all()
 
-            # Calculate spending based on category
-            spent = 0.0
-            if budget.category == "Groceries":
-                spent = sum(abs(t.amount) for t in transactions
-                           if t.category_detailed == "Groceries")
-            elif budget.category == "Dining":
-                spent = sum(abs(t.amount) for t in transactions
-                           if t.category_detailed in ["Restaurants", "Fast Food"])
-            elif budget.category == "Entertainment":
-                spent = sum(abs(t.amount) for t in transactions
-                           if "GENERAL" in (t.category_primary or ""))
-                spent = spent * 0.15  # Rough estimate for entertainment
-            elif budget.category == "Transportation":
-                spent = sum(abs(t.amount) for t in transactions
-                           if t.category_primary == "TRANSPORTATION")
-            elif budget.category == "Shopping":
-                spent = sum(abs(t.amount) for t in transactions
-                           if t.category_detailed == "Shopping" or t.merchant_name == "Amazon")
+            # Monthly subscriptions on the 1st
+            if txn_date.day == 1:
+                for merchant, amount in [
+                    ("Netflix", -15.99),
+                    ("Spotify", -9.99),
+                    ("Amazon Prime", -14.99),
+                    ("Microsoft 365", -12.99),
+                ]:
+                    transactions.append(
+                        Transaction(
+                            transaction_id=f"demo_sub_{merchant.lower()}_{txn_date.isoformat()}",
+                            account_id=credit.account_id,
+                            user_id="demo",
+                            date=txn_date,
+                            amount=amount,
+                            merchant_name=merchant,
+                            merchant_entity_id=f"{merchant.lower().replace(' ', '_')}_entity",
+                            payment_channel="online",
+                            category_primary="GENERAL_SERVICES",
+                            category_detailed="Subscription",
+                            pending=False,
+                        )
+                    )
 
-            budget.spent_amount = round(spent, 2)
-            budget.remaining_amount = round(budget.amount - spent, 2)
+            # Monthly savings transfer on the 5th
+            if txn_date.day == 5:
+                amount = 500.0
+                transactions.append(
+                    Transaction(
+                        transaction_id=f"demo_savings_out_{txn_date.isoformat()}",
+                        account_id=checking.account_id,
+                        user_id="demo",
+                        date=txn_date,
+                        amount=-amount,
+                        merchant_name="Savings Transfer",
+                        merchant_entity_id="savings_transfer_out",
+                        payment_channel="other",
+                        category_primary="TRANSFER_OUT",
+                        category_detailed="Savings",
+                        pending=False,
+                    )
+                )
+                transactions.append(
+                    Transaction(
+                        transaction_id=f"demo_savings_in_{txn_date.isoformat()}",
+                        account_id=savings.account_id,
+                        user_id="demo",
+                        date=txn_date,
+                        amount=amount,
+                        merchant_name="Savings Transfer",
+                        merchant_entity_id="savings_transfer_in",
+                        payment_channel="other",
+                        category_primary="TRANSFER_IN",
+                        category_detailed="Savings",
+                        pending=False,
+                    )
+                )
 
+            # Daily expenses (restaurants, groceries, transport)
+            category_choices = [
+                ("Whole Foods", -random.uniform(45, 120), "FOOD_AND_DRINK", "Groceries"),
+                ("Trader Joe's", -random.uniform(30, 90), "FOOD_AND_DRINK", "Groceries"),
+                ("Starbucks", -random.uniform(5, 15), "FOOD_AND_DRINK", "Coffee Shop"),
+                ("Chipotle", -random.uniform(15, 35), "FOOD_AND_DRINK", "Restaurants"),
+                ("Shell", -random.uniform(35, 70), "TRANSPORTATION", "Gas"),
+                ("Amazon", -random.uniform(25, 150), "GENERAL_MERCHANDISE", "Shopping"),
+            ]
+            for merchant_name, amount, cat_primary, cat_detailed in random.sample(category_choices, k=3):
+                account = credit if random.random() < 0.65 else checking
+                transactions.append(
+                    Transaction(
+                        transaction_id=f"demo_{merchant_name.lower().replace(' ', '_')}_{day_offset}_{random.randint(1000, 9999)}",
+                        account_id=account.account_id,
+                        user_id="demo",
+                        date=txn_date,
+                        amount=round(amount, 2),
+                        merchant_name=merchant_name,
+                        merchant_entity_id=f"{merchant_name.lower().replace(' ', '_')}_entity",
+                        payment_channel="in_store" if random.random() < 0.5 else "online",
+                        category_primary=cat_primary,
+                        category_detailed=cat_detailed,
+                        pending=False,
+                    )
+                )
+
+        db.add_all(transactions)
         await db.commit()
-        print("✓ Updated budget spending from transaction history")
 
-        print("\n" + "=" * 60)
-        print("✅ GOALS AND BUDGETS ADDED!")
-        print("=" * 60)
-        print(f"\nGoals added:")
-        for goal in goals:
-            print(f"  - {goal.title}: ${goal.current_amount:,.2f} / ${goal.target_amount:,.2f} ({goal.progress_percent:.1f}%)")
-        print(f"\nBudgets added:")
-        for budget in budgets:
-            print(f"  - {budget.category}: ${budget.spent_amount:,.2f} / ${budget.amount:,.2f}")
-        print()
+        # Run behavioral pipeline
+        detector = SignalDetector(db)
+        assigner = PersonaAssigner(db, window_days=180)
+        recommender = RecommendationEngine(db)
+
+        signals = await detector.detect_all_signals("demo", window_days=180)
+        await detector.save_signals(signals)
+
+        personas = await assigner.assign_personas("demo")
+        await assigner.save_personas("demo", personas)
+
+        recommendations = await recommender.generate_recommendations("demo")
+        await recommender.save_recommendations("demo", recommendations)
+
+        # Goals & budgets
+        goals = [
+            FinancialGoal(
+                user_id="demo",
+                goal_type="emergency_fund",
+                title="Emergency Fund",
+                description="Build a 6-month emergency fund",
+                target_amount=30000,
+                current_amount=12000,
+                target_date=(now + timedelta(days=365)).date().isoformat(),
+                status="active",
+                progress_percent=40.0,
+            ),
+            FinancialGoal(
+                user_id="demo",
+                goal_type="vacation",
+                title="Summer Vacation",
+                description="Plan a family vacation to Hawaii",
+                target_amount=5000,
+                current_amount=2500,
+                target_date=(now + timedelta(days=210)).date().isoformat(),
+                status="active",
+                progress_percent=50.0,
+            ),
+            FinancialGoal(
+                user_id="demo",
+                goal_type="major_purchase",
+                title="New Car",
+                description="Save for a new hybrid SUV",
+                target_amount=15000,
+                current_amount=4500,
+                target_date=(now + timedelta(days=300)).date().isoformat(),
+                status="active",
+                progress_percent=30.0,
+            ),
+        ]
+        budgets = [
+            Budget(
+                user_id="demo",
+                category="Groceries",
+                amount=600,
+                period="monthly",
+                spent_amount=420,
+                remaining_amount=180,
+                status="active",
+                period_start_date=(now - timedelta(days=15)).date().isoformat(),
+                period_end_date=(now + timedelta(days=15)).date().isoformat(),
+            ),
+            Budget(
+                user_id="demo",
+                category="Dining Out",
+                amount=300,
+                period="monthly",
+                spent_amount=260,
+                remaining_amount=40,
+                status="warning",
+                period_start_date=(now - timedelta(days=15)).date().isoformat(),
+                period_end_date=(now + timedelta(days=15)).date().isoformat(),
+            ),
+            Budget(
+                user_id="demo",
+                category="Entertainment",
+                amount=200,
+                period="monthly",
+                spent_amount=120,
+                remaining_amount=80,
+                status="active",
+                period_start_date=(now - timedelta(days=15)).date().isoformat(),
+                period_end_date=(now + timedelta(days=15)).date().isoformat(),
+            ),
+            Budget(
+                user_id="demo",
+                category="Transportation",
+                amount=350,
+                period="monthly",
+                spent_amount=280,
+                remaining_amount=70,
+                status="active",
+                period_start_date=(now - timedelta(days=15)).date().isoformat(),
+                period_end_date=(now + timedelta(days=15)).date().isoformat(),
+            ),
+        ]
+        db.add_all(goals + budgets)
+        await db.commit()
+
+        print("✅ Demo user ready with transactions, signals, personas, goals, and budgets.")
 
 
-async def main():
-    """Main initialization function"""
-    # Create tables first
-    await create_tables()
+# ---------------------------------------------------------------------------
+# Dataset readiness checks
+# ---------------------------------------------------------------------------
 
-    # Check if demo user already exists with data
+async def dataset_metrics(min_users: int) -> Tuple[bool, Dict[str, float]]:
     async with async_session_maker() as db:
-        result = await db.execute(select(User).where(User.user_id == "demo"))
-        existing_user = result.scalar_one_or_none()
+        user_count = await db.scalar(select(func.count(User.user_id)))
+        consented = await db.scalar(
+            select(func.count(User.user_id)).where(User.consent_status.is_(True))
+        )
+        signal_counts = await db.execute(
+            select(Signal.user_id, func.count(func.distinct(Signal.signal_type)))
+            .group_by(Signal.user_id)
+        )
+        persona_counts = await db.execute(
+            select(Persona.user_id, func.count(Persona.persona_id)).group_by(Persona.user_id)
+        )
+        users_with_signals = sum(1 for _, count in signal_counts if count >= 3)
+        users_with_persona = sum(1 for _, count in persona_counts if count >= 1)
 
-        if existing_user:
-            # Check if user already has transactions (indicating initialized)
-            result = await db.execute(select(Transaction).where(Transaction.user_id == "demo"))
-            existing_transactions = result.scalars().all()
+        ready = (
+            user_count >= min_users
+            and users_with_signals >= min_users
+            and users_with_persona >= min_users
+        )
+        coverage = {
+            "users_total": float(user_count or 0),
+            "users_with_signals": float(users_with_signals),
+            "users_with_personas": float(users_with_persona),
+            "consented_users": float(consented or 0),
+        }
+        return ready, coverage
 
-            if len(existing_transactions) > 0:
-                print("\n✅ Database already initialized with demo data. Skipping initialization.")
-                await engine.dispose()
-                return
 
-    # Then create demo user in same event loop
-    await create_demo_user()
+# ---------------------------------------------------------------------------
+# CLI + control flow
+# ---------------------------------------------------------------------------
 
-    # Add goals and budgets in same event loop
-    await create_demo_goals_budgets()
+async def ensure_tables() -> None:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-    # Dispose engine to ensure all writes are flushed
-    await engine.dispose()
+
+async def async_main(args) -> None:
+    await ensure_tables()
+    await create_demo_user(force_refresh=args.refresh_demo)
+
+    if args.check_only:
+        ready, coverage = await dataset_metrics(args.user_count)
+        status = "READY" if ready else "NOT READY"
+        print(f"Dataset status: {status}")
+        for key, value in coverage.items():
+            print(f"{key}: {int(value)}")
+        return
+
+    if args.ensure_dataset:
+        ready, coverage = await dataset_metrics(args.user_count)
+        if ready and not args.force_dataset:
+            print(
+                f"✅ Dataset already meets requirements (>= {args.user_count} users with full coverage)."
+            )
+            return
+
+        print("🚀 Generating synthetic dataset...")
+        stats = await generate_full_dataset(
+            user_count=args.user_count,
+            force=args.force_dataset,
+            purge_existing=args.purge_before_dataset,
+        )
+        print("Synthetic dataset stats:")
+        for key, value in stats.items():
+            print(f"  {key}: {value}")
+
+        # Verify post-generation
+        ready, coverage = await dataset_metrics(args.user_count)
+        status = "READY" if ready else "NOT READY"
+        print(f"Dataset status after generation: {status}")
+        for key, value in coverage.items():
+            print(f"  {key}: {int(value)}")
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Initialize MaxFinanceAI dataset.")
+    parser.add_argument(
+        "--user-count",
+        type=int,
+        default=DEFAULT_USER_COUNT,
+        help="Minimum synthetic user count for readiness checks (default: %(default)s).",
+    )
+    parser.add_argument(
+        "--ensure-dataset",
+        action="store_true",
+        help="Run dataset generation if minimum user count/coverage is not met.",
+    )
+    parser.add_argument(
+        "--force-dataset",
+        action="store_true",
+        help="Regenerate dataset even if it appears ready and the flag file exists.",
+    )
+    parser.add_argument(
+        "--purge-before-dataset",
+        action="store_true",
+        help="Delete existing synthetic users (except demo) before generating new data.",
+    )
+    parser.add_argument(
+        "--refresh-demo",
+        action="store_true",
+        help="Force refresh of the demo user even if it already exists.",
+    )
+    parser.add_argument(
+        "--check-only",
+        action="store_true",
+        help="Only report readiness metrics; do not mutate data.",
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    asyncio.run(async_main(args))
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

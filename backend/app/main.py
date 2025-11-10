@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -79,7 +81,7 @@ async def dataset_status():
 
     # Count users in database
     async for session in get_db():
-        result = await session.execute(select(func.count(User.id)))
+        result = await session.execute(select(func.count(User.user_id)))
         user_count = result.scalar()
         break
 
@@ -95,11 +97,12 @@ async def dataset_status():
 
     status = "complete" if flag_exists else ("generating" if log_exists else "not_started")
 
+    expected_users = int(os.getenv("DATASET_USER_COUNT", "150"))
     return {
         "status": status,
         "flag_file_exists": flag_exists,
         "user_count": user_count,
-        "expected_users": 100,
+        "expected_users": expected_users,
         "is_complete": flag_exists,
         "recent_logs": recent_logs
     }
