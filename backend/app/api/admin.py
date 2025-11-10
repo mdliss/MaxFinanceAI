@@ -373,3 +373,47 @@ async def fix_coverage(db: AsyncSession = Depends(get_db)) -> Dict:
             "coverage_percentage": round((coverage_row[1] / coverage_row[0] * 100), 2) if coverage_row[0] > 0 else 0
         }
     }
+
+
+@router.post("/generate-full-dataset", status_code=status.HTTP_202_ACCEPTED)
+async def generate_full_dataset(db: AsyncSession = Depends(get_db)) -> Dict:
+    """
+    Generate 100 users with complete financial data.
+    This is a background process that will take 10-15 minutes.
+    """
+    import subprocess
+    import os
+
+    # Get the backend directory path
+    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    script_path = os.path.join(backend_dir, "populate_full_dataset.py")
+
+    # Check if script exists
+    if not os.path.exists(script_path):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Population script not found at {script_path}"
+        )
+
+    # Run the script in the background
+    try:
+        subprocess.Popen(
+            ["python3", script_path],
+            cwd=backend_dir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+
+        return {
+            "status": "started",
+            "message": "Dataset generation started in background. This will take 10-15 minutes.",
+            "check_progress": "/api/v1/users/",
+            "expected_users": 100,
+            "estimated_time_minutes": 15
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to start dataset generation: {str(e)}"
+        )
