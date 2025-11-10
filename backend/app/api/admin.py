@@ -8,6 +8,8 @@ import random
 
 from app.database import get_db
 from app.models import User, Account, Transaction, Signal, Persona, Recommendation
+from app.models.goal import FinancialGoal
+from app.models.budget import Budget
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -194,6 +196,98 @@ async def setup_demo_user(db: AsyncSession = Depends(get_db)) -> Dict:
         )
         db.add(persona)
 
+    # 6. Create financial goals
+    goals_data = [
+        {
+            'goal_type': 'emergency_fund',
+            'title': 'Emergency Fund',
+            'description': 'Build 6-month emergency fund',
+            'target_amount': 30000,
+            'current_amount': 10000,
+            'target_date': (now + timedelta(days=365)).date().isoformat(),
+            'status': 'active',
+            'progress_percent': 33.33
+        },
+        {
+            'goal_type': 'vacation',
+            'title': 'Summer Vacation',
+            'description': 'Trip to Europe',
+            'target_amount': 5000,
+            'current_amount': 2500,
+            'target_date': (now + timedelta(days=180)).date().isoformat(),
+            'status': 'active',
+            'progress_percent': 50.0
+        },
+        {
+            'goal_type': 'major_purchase',
+            'title': 'New Car',
+            'description': 'Down payment for new car',
+            'target_amount': 10000,
+            'current_amount': 3000,
+            'target_date': (now + timedelta(days=270)).date().isoformat(),
+            'status': 'active',
+            'progress_percent': 30.0
+        }
+    ]
+
+    for goal_data in goals_data:
+        goal = FinancialGoal(
+            user_id="demo",
+            **goal_data
+        )
+        db.add(goal)
+
+    # 7. Create budgets
+    budgets_data = [
+        {
+            'category': 'Groceries',
+            'amount': 600,
+            'period': 'monthly',
+            'spent_amount': 450,
+            'remaining_amount': 150,
+            'status': 'active',
+            'period_start_date': (now - timedelta(days=15)).date().isoformat(),
+            'period_end_date': (now + timedelta(days=15)).date().isoformat()
+        },
+        {
+            'category': 'Dining Out',
+            'amount': 300,
+            'period': 'monthly',
+            'spent_amount': 280,
+            'remaining_amount': 20,
+            'status': 'warning',
+            'period_start_date': (now - timedelta(days=15)).date().isoformat(),
+            'period_end_date': (now + timedelta(days=15)).date().isoformat()
+        },
+        {
+            'category': 'Entertainment',
+            'amount': 200,
+            'period': 'monthly',
+            'spent_amount': 150,
+            'remaining_amount': 50,
+            'status': 'active',
+            'period_start_date': (now - timedelta(days=15)).date().isoformat(),
+            'period_end_date': (now + timedelta(days=15)).date().isoformat()
+        },
+        {
+            'category': 'Transportation',
+            'amount': 400,
+            'period': 'monthly',
+            'spent_amount': 320,
+            'remaining_amount': 80,
+            'status': 'active',
+            'period_start_date': (now - timedelta(days=15)).date().isoformat(),
+            'period_end_date': (now + timedelta(days=15)).date().isoformat()
+        }
+    ]
+
+    for budget_data in budgets_data:
+        budget = Budget(
+            user_id="demo",
+            **budget_data
+        )
+        db.add(budget)
+
     await db.commit()
 
     return {
@@ -203,7 +297,9 @@ async def setup_demo_user(db: AsyncSession = Depends(get_db)) -> Dict:
         "accounts": 3,
         "transactions": transaction_id - 1,
         "signals": 5,
-        "personas": 3
+        "personas": 3,
+        "goals": 3,
+        "budgets": 4
     }
 
 

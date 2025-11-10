@@ -37,6 +37,8 @@ app.add_middleware(
         "http://localhost:3001",
         "http://localhost:3002",
         "https://frontend-ten-chi-27.vercel.app",
+        "https://frontend-7w28jda22-max-liss-projects.vercel.app",
+        "https://frontend-bky8pef7o-max-liss-projects.vercel.app",
         "*"
     ],
     allow_credentials=True,
