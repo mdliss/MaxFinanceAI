@@ -262,7 +262,7 @@ async def create_demo_goals_budgets():
         # Import here to avoid circular imports
         from app.models import FinancialGoal, Budget
 
-        # Create goals
+        # Create goals with realistic progress
         goals = [
             FinancialGoal(
                 user_id=user_id,
@@ -270,7 +270,8 @@ async def create_demo_goals_budgets():
                 title="Emergency Fund",
                 description="Build a 6-month emergency fund for unexpected expenses",
                 target_amount=15000.00,
-                current_amount=0.00,
+                current_amount=3200.00,
+                progress_percent=21.33,
                 target_date=(datetime.now() + timedelta(days=266)).date().isoformat(),
                 status="active"
             ),
@@ -280,7 +281,8 @@ async def create_demo_goals_budgets():
                 title="Summer Vacation",
                 description="Save for a summer vacation to Hawaii",
                 target_amount=5000.00,
-                current_amount=0.00,
+                current_amount=1850.00,
+                progress_percent=37.0,
                 target_date=(datetime.now() + timedelta(days=250)).date().isoformat(),
                 status="active"
             ),
@@ -290,7 +292,8 @@ async def create_demo_goals_budgets():
                 title="New Laptop",
                 description="Save for a new MacBook Pro",
                 target_amount=2500.00,
-                current_amount=0.00,
+                current_amount=650.00,
+                progress_percent=26.0,
                 target_date=(datetime.now() + timedelta(days=120)).date().isoformat(),
                 status="active"
             ),
@@ -300,7 +303,7 @@ async def create_demo_goals_budgets():
             db.add(goal)
 
         await db.commit()
-        print(f"✓ Created {len(goals)} financial goals")
+        print(f"✓ Created {len(goals)} financial goals with progress")
 
         # Create budgets
         budgets = [
@@ -377,15 +380,67 @@ async def create_demo_goals_budgets():
         await db.commit()
         print(f"✓ Created {len(budgets)} budgets")
 
+        # Update budget spending from transactions
+        print("\nCalculating budget spending from transactions...")
+        from sqlalchemy import and_
+
+        # Get current month's transactions
+        now = datetime.now()
+        period_start = now.replace(day=1)
+        period_end = (period_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+
+        # Refresh budgets to get them with IDs
+        result = await db.execute(select(Budget).where(Budget.user_id == user_id))
+        budgets = result.scalars().all()
+
+        for budget in budgets:
+            # Get transactions for this budget category
+            result = await db.execute(
+                select(Transaction).where(
+                    and_(
+                        Transaction.user_id == user_id,
+                        Transaction.date >= period_start.date(),
+                        Transaction.date <= period_end.date(),
+                        Transaction.amount < 0  # Only expenses
+                    )
+                )
+            )
+            transactions = result.scalars().all()
+
+            # Calculate spending based on category
+            spent = 0.0
+            if budget.category == "Groceries":
+                spent = sum(abs(t.amount) for t in transactions
+                           if t.category_detailed == "Groceries")
+            elif budget.category == "Dining":
+                spent = sum(abs(t.amount) for t in transactions
+                           if t.category_detailed in ["Restaurants", "Fast Food"])
+            elif budget.category == "Entertainment":
+                spent = sum(abs(t.amount) for t in transactions
+                           if "GENERAL" in (t.category_primary or ""))
+                spent = spent * 0.15  # Rough estimate for entertainment
+            elif budget.category == "Transportation":
+                spent = sum(abs(t.amount) for t in transactions
+                           if t.category_primary == "TRANSPORTATION")
+            elif budget.category == "Shopping":
+                spent = sum(abs(t.amount) for t in transactions
+                           if t.category_detailed == "Shopping" or t.merchant_name == "Amazon")
+
+            budget.spent_amount = round(spent, 2)
+            budget.remaining_amount = round(budget.amount - spent, 2)
+
+        await db.commit()
+        print("✓ Updated budget spending from transaction history")
+
         print("\n" + "=" * 60)
         print("✅ GOALS AND BUDGETS ADDED!")
         print("=" * 60)
         print(f"\nGoals added:")
         for goal in goals:
-            print(f"  - {goal.title}: ${goal.target_amount:,.2f}")
+            print(f"  - {goal.title}: ${goal.current_amount:,.2f} / ${goal.target_amount:,.2f} ({goal.progress_percent:.1f}%)")
         print(f"\nBudgets added:")
         for budget in budgets:
-            print(f"  - {budget.category}: ${budget.amount:,.2f}/month")
+            print(f"  - {budget.category}: ${budget.spent_amount:,.2f} / ${budget.amount:,.2f}")
         print()
 
 
@@ -393,6 +448,21 @@ async def main():
     """Main initialization function"""
     # Create tables first
     await create_tables()
+
+    # Check if demo user already exists with data
+    async with async_session_maker() as db:
+        result = await db.execute(select(User).where(User.user_id == "demo"))
+        existing_user = result.scalar_one_or_none()
+
+        if existing_user:
+            # Check if user already has transactions (indicating initialized)
+            result = await db.execute(select(Transaction).where(Transaction.user_id == "demo"))
+            existing_transactions = result.scalars().all()
+
+            if len(existing_transactions) > 0:
+                print("\n✅ Database already initialized with demo data. Skipping initialization.")
+                await engine.dispose()
+                return
 
     # Then create demo user in same event loop
     await create_demo_user()
