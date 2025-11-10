@@ -173,7 +173,7 @@ async def setup_demo_user(db: AsyncSession = Depends(get_db)) -> Dict:
             user_id="demo",
             signal_type=signal_data['signal_type'],
             value=signal_data['value'],
-            details=json.dumps(signal_data['details']),
+            details=signal_data['details'],  # Pass dict directly to JSON column
             computed_at=now
         )
         db.add(signal)
