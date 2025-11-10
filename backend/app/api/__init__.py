@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api import users, consent, signals, personas, recommendations, guardrails, operator, evaluation, profiles, accounts, transactions, chat, goals, budgets, alerts
+from app.api import users, consent, signals, personas, recommendations, guardrails, operator, evaluation, profiles, accounts, transactions, chat, goals, budgets, alerts, admin
 
 api_router = APIRouter()
 
@@ -19,5 +19,7 @@ api_router.include_router(chat.router)
 api_router.include_router(goals.router)
 api_router.include_router(budgets.router)
 api_router.include_router(alerts.router)
+# Admin Endpoints
+api_router.include_router(admin.router)
 
 __all__ = ["api_router"]

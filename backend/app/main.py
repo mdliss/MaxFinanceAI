@@ -97,7 +97,7 @@ async def dataset_status():
         "status": status,
         "flag_file_exists": flag_exists,
         "user_count": user_count,
-        "expected_users": 85,
+        "expected_users": 100,
         "is_complete": flag_exists,
         "recent_logs": recent_logs
     }

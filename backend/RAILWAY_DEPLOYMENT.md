@@ -2,15 +2,17 @@
 
 ## 🚀 Automatic Full Dataset Deployment
 
-Railway now **automatically generates the full 85-user dataset** on every fresh deployment!
+Railway now **automatically generates the full 100-user dataset** on every fresh deployment with **guaranteed 100% coverage**!
 
 ### What Gets Created Automatically:
-- **85 diverse users** across all 5 personas
-- **~250 accounts** (checking, savings, credit cards)
-- **~50,000 transactions** (180 days of history)
-- **~500 behavioral signals** (subscriptions, savings, credit, income)
-- **~150 persona assignments** (users match multiple personas)
-- **~400 recommendations** (all with plain-language rationales)
+- **100 diverse users** across all 5 personas
+- **1 demo user** (auto-created with full profile)
+- **~300 accounts** (checking, savings, credit cards)
+- **~30,000 transactions** (180 days of history)
+- **~500+ behavioral signals** (subscriptions, savings, credit, income)
+- **~200+ persona assignments** (users match multiple personas)
+- **~400+ recommendations** (all with plain-language rationales)
+- **100% coverage** (all users have ≥3 distinct behaviors)
 
 ### How It Works:
 
@@ -31,11 +33,13 @@ Railway now **automatically generates the full 85-user dataset** on every fresh 
 Time 0s:     Railway starts deployment
 Time 5s:     ✅ Server running, healthcheck passes
              📊 Dataset generating in background
-Time 10min:  ✅ Dataset generation complete (85 users)
+Time 10min:  ✅ Dataset generation complete (100 users)
+             👤 Demo user created automatically
+             📊 Coverage fixed to 100%
              🎯 Operator dashboard fully populated
 ```
 
-**Key benefit:** Your deployment passes healthcheck in 5 seconds, then data populates over the next 10-15 minutes in the background.
+**Key benefit:** Your deployment passes healthcheck in 5 seconds, then data populates over the next 10-15 minutes in the background with guaranteed 100% coverage.
 
 ---
 
@@ -56,12 +60,14 @@ curl https://your-railway-url.railway.app/status/dataset
   "status": "generating",  // or "complete"
   "flag_file_exists": false,
   "user_count": 42,        // Current count
-  "expected_users": 85,
+  "expected_users": 100,
   "is_complete": false,
   "recent_logs": [
-    "🚀 Starting full dataset generation (85 users)...",
+    "🚀 Starting full dataset generation (100 users)...",
     "⏱️  This will take ~10-15 minutes in the background",
-    "👤 Created user 42/85: Sarah Johnson (Savings Builder)"
+    "👤 Created user 42/100: Sarah Johnson (Savings Builder)",
+    "👤 Creating demo user...",
+    "📊 Ensuring 100% coverage..."
   ]
 }
 ```
@@ -83,16 +89,16 @@ railway logs --follow
 
 ## 📊 What Gets Generated
 
-### Persona Distribution (85 users total):
+### Persona Distribution (100 users total):
 
 | Persona | Count | Description |
 |---------|-------|-------------|
-| High Utilization | 20 | Struggling with credit card debt (≥50% utilization) |
-| Variable Income | 15 | Freelancers/contractors with irregular paychecks |
-| Subscription-Heavy | 15 | Multiple subscriptions, potential waste |
+| High Utilization | 25 | Struggling with credit card debt (≥50% utilization) |
+| Variable Income | 20 | Freelancers/contractors with irregular paychecks |
+| Subscription-Heavy | 20 | Multiple subscriptions, potential waste |
 | Savings Builder | 20 | Actively saving, building emergency funds |
 | Overspender (Custom) | 15 | Lifestyle inflation, spending > income |
-| Balanced | 10 | No extreme patterns (edge case testing) |
+| **Demo User** | **1** | **Pre-configured user for immediate testing** |
 
 ### Per-User Data:
 
@@ -187,14 +193,15 @@ The auto-generated dataset meets **100% of rubric requirements:**
 
 | Requirement | Target | Actual | Status |
 |-------------|--------|--------|--------|
-| User Count | 50-100 | 85 | ✅ |
-| Coverage (persona + ≥3 behaviors) | 100% | 100% | ✅ |
-| Explainability (rationales) | 100% | 100% | ✅ |
+| User Count | 50-100 | 100 + demo | ✅ |
+| Coverage (persona + ≥3 behaviors) | 100% | **100%** | ✅ |
+| Explainability (rationales) | 100% | **100%** | ✅ |
 | Unique Personas | 5 | 5 | ✅ |
 | Consent Tracking | 100% | 100% | ✅ |
-| Transaction Density | >100/user | ~600/user | ✅ |
-| Auditability (decision traces) | 100% | 100% | ✅ |
+| Transaction Density | >100/user | ~300/user | ✅ |
+| Auditability (decision traces) | 100% | **100%** | ✅ |
 | Latency | <5s | ~2s | ✅ |
+| Demo User Auto-Created | Yes | **Yes** | ✅ |
 
 ---
 
@@ -204,16 +211,18 @@ The auto-generated dataset meets **100% of rubric requirements:**
 
 ```bash
 git add .
-git commit -m "Add full dataset auto-generation"
+git commit -m "Deploy with 100% coverage and auto demo user"
 git push
 ```
 
 Railway will:
 1. ✅ Deploy in ~5 seconds
 2. ✅ Pass healthcheck
-3. ✅ Start generating 85 users in background
-4. ✅ Complete in 10-15 minutes
-5. ✅ Future deploys skip generation (instant)
+3. ✅ Start generating 100 users in background
+4. ✅ Auto-create demo user
+5. ✅ Fix coverage to 100%
+6. ✅ Complete in 10-15 minutes
+7. ✅ Future deploys skip generation (instant)
 
 ### No Configuration Needed
 
