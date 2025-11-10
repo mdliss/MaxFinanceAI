@@ -12,12 +12,27 @@ if "sqlite" in db_url:
     db_path = db_url.split("sqlite+aiosqlite:///")[-1]
     db_dir = str(Path(db_path).parent)
 
-    # Handle Railway volume mount (where /app/data might exist as a file)
-    if os.path.exists(db_dir) and os.path.isfile(db_dir):
-        print(f"⚠️  {db_dir} exists as a file, removing it to create directory")
-        os.remove(db_dir)
-
-    os.makedirs(db_dir, exist_ok=True)
+    # Handle Railway volume mount
+    try:
+        os.makedirs(db_dir, exist_ok=True)
+    except FileExistsError:
+        # If directory exists but makedirs fails, it might be a file or symlink
+        if os.path.isfile(db_dir) or os.path.islink(db_dir):
+            print(f"⚠️  {db_dir} exists as a file/link, removing it")
+            os.remove(db_dir)
+            os.makedirs(db_dir, exist_ok=True)
+        elif os.path.isdir(db_dir):
+            # Directory already exists, which is fine
+            print(f"📁 Using existing directory: {db_dir}")
+        else:
+            # Unknown file type, try to remove and recreate
+            print(f"⚠️  {db_dir} has unknown type, attempting to remove")
+            try:
+                os.remove(db_dir)
+            except:
+                import shutil
+                shutil.rmtree(db_dir, ignore_errors=True)
+            os.makedirs(db_dir, exist_ok=True)
     print(f"📁 Database directory: {db_dir}")
     print(f"📊 Database file: {db_path}")
 
