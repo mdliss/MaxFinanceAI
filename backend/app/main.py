@@ -62,3 +62,42 @@ async def root():
 @app.get("/health/")
 async def health_check():
     return {"status": "healthy"}
+
+@app.get("/status/dataset")
+async def dataset_status():
+    """Check if full dataset generation is complete"""
+    import os
+    import asyncio
+    from app.database import get_db
+    from sqlalchemy import select, func
+    from app.models import User
+
+    flag_exists = os.path.exists("/app/data/full_dataset.flag")
+    log_exists = os.path.exists("/tmp/dataset_generation.log")
+
+    # Count users in database
+    async for session in get_db():
+        result = await session.execute(select(func.count(User.id)))
+        user_count = result.scalar()
+        break
+
+    # Read last few lines of log if it exists
+    recent_logs = []
+    if log_exists:
+        try:
+            with open("/tmp/dataset_generation.log", "r") as f:
+                lines = f.readlines()
+                recent_logs = [line.strip() for line in lines[-10:]]
+        except:
+            pass
+
+    status = "complete" if flag_exists else ("generating" if log_exists else "not_started")
+
+    return {
+        "status": status,
+        "flag_file_exists": flag_exists,
+        "user_count": user_count,
+        "expected_users": 85,
+        "is_complete": flag_exists,
+        "recent_logs": recent_logs
+    }
