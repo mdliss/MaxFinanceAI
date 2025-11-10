@@ -71,7 +71,9 @@
       "Bash(DATABASE_URL=\"sqlite+aiosqlite:///./data/spendsense.db\" python:*)",
       "Bash(DATABASE_URL=\"sqlite+aiosqlite:///./data/spendsense.db\" python3:*)",
       "Bash(ln:*)",
-      "Bash(DATABASE_URL=\"sqlite+aiosqlite:////Users/max/MaxFinanceAI/data/test_init.db\" python3:*)"
+      "Bash(DATABASE_URL=\"sqlite+aiosqlite:////Users/max/MaxFinanceAI/data/test_init.db\" python3:*)",
+      "Bash(DATABASE_URL=\"sqlite+aiosqlite:///./data/spendsense.db\" sqlite3:*)",
+      "Bash(DATABASE_URL=\"sqlite+aiosqlite:///./data/spendsense.db\" uvicorn:*)"
     ],
     "deny": [],
     "ask": []

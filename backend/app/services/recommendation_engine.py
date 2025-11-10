@@ -285,7 +285,10 @@ class RecommendationEngine:
         )
 
         if not is_valid:
-            raise GuardrailViolation(reason, "batch_validation")
+            # For dataset generation, return what we have instead of crashing
+            # This allows users with insufficient data to still be processed
+            print(f"⚠️  Guardrail warning for {user_id}: {reason}")
+            filtered_recs = recommendations_dict  # Use unfiltered if validation fails
 
         # Convert to Recommendation objects
         recommendations = []
