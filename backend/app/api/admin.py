@@ -375,45 +375,130 @@ async def fix_coverage(db: AsyncSession = Depends(get_db)) -> Dict:
     }
 
 
-@router.post("/generate-full-dataset", status_code=status.HTTP_202_ACCEPTED)
-async def generate_full_dataset(db: AsyncSession = Depends(get_db)) -> Dict:
+@router.post("/create-batch-users", status_code=status.HTTP_201_CREATED)
+async def create_batch_users(count: int = 10, db: AsyncSession = Depends(get_db)) -> Dict:
     """
-    Generate 100 users with complete financial data.
-    This is a background process that will take 10-15 minutes.
+    Create a batch of users (default 10). Call multiple times to reach 100.
     """
-    import subprocess
-    import os
+    from app.services.signal_detector import SignalDetector
+    from app.services.persona_assigner import PersonaAssigner
 
-    # Get the backend directory path
-    backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    script_path = os.path.join(backend_dir, "populate_full_dataset.py")
+    signal_detector = SignalDetector(db)
+    persona_assigner = PersonaAssigner(db)
 
-    # Check if script exists
-    if not os.path.exists(script_path):
-        raise HTTPException(
-            status_code=404,
-            detail=f"Population script not found at {script_path}"
+    # Get current user count to determine starting ID
+    result = await db.execute(select(func.count(User.user_id)))
+    existing_count = result.scalar() or 0
+
+    created_users = []
+    now = datetime.now(timezone.utc)
+
+    for i in range(count):
+        user_num = existing_count + i + 1
+        user_id = f"user_{user_num:03d}"
+
+        # Create user
+        user = User(
+            user_id=user_id,
+            name=f"User {user_num}",
+            age=random.randint(22, 65),
+            income_level=random.choice(["low", "medium", "high"]),
+            consent_status=True,
+            consent_timestamp=now,
+            created_at=now
         )
+        db.add(user)
 
-    # Run the script in the background
-    try:
-        subprocess.Popen(
-            ["python3", script_path],
-            cwd=backend_dir,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True
-        )
+        # Create 2-3 accounts per user
+        num_accounts = random.randint(2, 3)
+        accounts = []
+        for acc_idx in range(num_accounts):
+            acc_type = random.choice(["depository", "credit"]) if acc_idx > 0 else "depository"
+            if acc_type == "depository":
+                balance = random.uniform(1000, 15000)
+                account = Account(
+                    account_id=f"{user_id}_acc_{acc_idx}",
+                    user_id=user_id,
+                    type="depository",
+                    subtype=random.choice(["checking", "savings"]),
+                    available_balance=balance,
+                    current_balance=balance,
+                    credit_limit=None,
+                    iso_currency_code="USD",
+                    holder_category="personal"
+                )
+            else:
+                limit = random.uniform(2000, 10000)
+                balance = random.uniform(0, limit * 0.7)
+                account = Account(
+                    account_id=f"{user_id}_acc_{acc_idx}",
+                    user_id=user_id,
+                    type="credit",
+                    subtype="credit card",
+                    available_balance=limit - balance,
+                    current_balance=balance,
+                    credit_limit=limit,
+                    iso_currency_code="USD",
+                    holder_category="personal"
+                )
+            db.add(account)
+            accounts.append(account)
 
-        return {
-            "status": "started",
-            "message": "Dataset generation started in background. This will take 10-15 minutes.",
-            "check_progress": "/api/v1/users/",
-            "expected_users": 100,
-            "estimated_time_minutes": 15
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to start dataset generation: {str(e)}"
-        )
+        # Create transactions (30 per user for speed)
+        for txn_idx in range(30):
+            account = random.choice(accounts)
+            days_ago = random.randint(0, 180)
+            txn_date = now - timedelta(days=days_ago)
+
+            if random.random() < 0.2:  # 20% income
+                amount = random.uniform(1000, 5000)
+                category = "Income"
+            else:  # 80% expenses
+                amount = -random.uniform(10, 500)
+                category = random.choice(["Food and Drink", "Shopping", "Transportation", "Entertainment"])
+
+            txn = Transaction(
+                transaction_id=f"{user_id}_txn_{txn_idx}",
+                account_id=account.account_id,
+                user_id=user_id,
+                date=txn_date.date(),
+                amount=amount,
+                merchant_name=f"Merchant {random.randint(1, 100)}",
+                merchant_entity_id=f"merchant_{random.randint(1, 100)}",
+                payment_channel=random.choice(["online", "in_store"]),
+                category_primary=category,
+                category_detailed=category,
+                pending=False
+            )
+            db.add(txn)
+
+        await db.flush()
+
+        # Detect signals for this user
+        user_accounts = accounts
+        result = await db.execute(select(Transaction).where(Transaction.user_id == user_id))
+        user_transactions = list(result.scalars().all())
+
+        signals = await signal_detector.detect_all_signals(user_id, user_accounts, user_transactions)
+        for signal in signals:
+            db.add(signal)
+
+        # Assign personas
+        personas = await persona_assigner.assign_personas(user_id, signals)
+        for persona in personas:
+            db.add(persona)
+
+        created_users.append(user_id)
+
+    await db.commit()
+
+    # Get updated counts
+    result = await db.execute(select(func.count(User.user_id)))
+    total_users = result.scalar()
+
+    return {
+        "status": "success",
+        "users_created": len(created_users),
+        "total_users_now": total_users,
+        "created_user_ids": created_users
+    }
