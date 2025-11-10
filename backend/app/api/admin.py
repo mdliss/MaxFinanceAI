@@ -105,18 +105,19 @@ async def setup_demo_user(db: AsyncSession = Depends(get_db)) -> Dict:
                 db.add(txn)
                 transaction_id += 1
 
-    # 4. Create signals
+    # 4. Create signals (matching schema from signal_detector.py)
     signals_data = [
         {
             'signal_id': 'demo_signal_1',
             'signal_type': 'credit_utilization',
             'value': 25.0,
             'details': {
-                'utilization': 0.25,
-                'credit_limit': 5000,
-                'balance': 1250,
-                'interpretation': 'healthy',
-                'reasoning': 'Credit utilization at 25% is within healthy range'
+                'account_id': 'demo_credit',
+                'current_balance': 1250.0,
+                'credit_limit': 5000.0,
+                'utilization_percent': 25.0,
+                'status': 'healthy',
+                'window_days': 180
             }
         },
         {
@@ -124,11 +125,13 @@ async def setup_demo_user(db: AsyncSession = Depends(get_db)) -> Dict:
             'signal_type': 'income_stability',
             'value': 95.0,
             'details': {
-                'stability_score': 0.95,
-                'avg_income': 5000,
-                'income_variance': 0.02,
-                'interpretation': 'stable',
-                'reasoning': 'Consistent monthly salary with minimal variance'
+                'average_income': 5000.0,
+                'average_interval_days': 30.0,
+                'median_pay_gap_days': 30.0,
+                'stability_score': 95.0,
+                'income_count': 6,
+                'status': 'stable',
+                'window_days': 180
             }
         },
         {
@@ -139,8 +142,8 @@ async def setup_demo_user(db: AsyncSession = Depends(get_db)) -> Dict:
                 'subscription_count': 2,
                 'monthly_cost': 25.98,
                 'subscriptions': ['Netflix', 'Spotify'],
-                'interpretation': 'manageable',
-                'reasoning': 'Two active subscriptions with reasonable monthly cost'
+                'status': 'manageable',
+                'window_days': 180
             }
         },
         {
@@ -148,10 +151,11 @@ async def setup_demo_user(db: AsyncSession = Depends(get_db)) -> Dict:
             'signal_type': 'savings_growth',
             'value': 500.0,
             'details': {
-                'monthly_savings': 500,
-                'growth_rate': 0.1,
-                'interpretation': 'positive',
-                'reasoning': 'Consistent monthly savings of $500 showing good financial discipline'
+                'monthly_savings': 500.0,
+                'growth_rate': 10.0,
+                'current_savings': 13500.0,
+                'status': 'positive',
+                'window_days': 180
             }
         },
         {
@@ -160,9 +164,11 @@ async def setup_demo_user(db: AsyncSession = Depends(get_db)) -> Dict:
             'value': 80.0,
             'details': {
                 'cash_flow_ratio': 0.8,
-                'avg_monthly_surplus': 800,
-                'interpretation': 'healthy',
-                'reasoning': 'Positive cash flow with healthy income-to-expense ratio'
+                'avg_monthly_surplus': 800.0,
+                'total_income': 5000.0,
+                'total_expenses': 4200.0,
+                'status': 'healthy',
+                'window_days': 180
             }
         }
     ]
