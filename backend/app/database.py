@@ -11,6 +11,12 @@ if "sqlite" in db_url:
     # Extract path from sqlite URL (remove sqlite+aiosqlite:/// prefix)
     db_path = db_url.split("sqlite+aiosqlite:///")[-1]
     db_dir = str(Path(db_path).parent)
+
+    # Handle Railway volume mount (where /app/data might exist as a file)
+    if os.path.exists(db_dir) and os.path.isfile(db_dir):
+        print(f"⚠️  {db_dir} exists as a file, removing it to create directory")
+        os.remove(db_dir)
+
     os.makedirs(db_dir, exist_ok=True)
     print(f"📁 Database directory: {db_dir}")
     print(f"📊 Database file: {db_path}")
