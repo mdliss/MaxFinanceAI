@@ -13,7 +13,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 @router.post("/setup-demo-user", status_code=status.HTTP_201_CREATED)
-async def setup_demo_user(db: AsyncSession) -> Dict:
+async def setup_demo_user(db: AsyncSession = Depends(get_db)) -> Dict:
     """
     Create a comprehensive demo user with accounts, transactions, signals, and personas.
     This endpoint is for production setup.
@@ -208,7 +208,7 @@ async def setup_demo_user(db: AsyncSession) -> Dict:
 
 
 @router.post("/fix-coverage", status_code=status.HTTP_200_OK)
-async def fix_coverage(db: AsyncSession) -> Dict:
+async def fix_coverage(db: AsyncSession = Depends(get_db)) -> Dict:
     """
     Fix users with < 3 distinct signal types by adding cash_flow_health signal.
     """
